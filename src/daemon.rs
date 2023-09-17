@@ -14,6 +14,8 @@ struct SystemInfo {
     motherboard: String,
     kernel: String,
     gpus: Vec<String>,
+    total_memory: u64,
+    used_memory: u64,
 }
 
 lazy_static! {
@@ -30,6 +32,8 @@ pub(crate) fn main() {
     let motherboard: String = get_motherboard();
     let kernel: String = get_kernel();
     let gpus: Vec<String> = get_gpus();
+    let total_memory: u64 = get_total_memory();
+    let used_memory: u64 = get_used_memory();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -37,6 +41,8 @@ pub(crate) fn main() {
         motherboard,
         kernel,
         gpus,
+        total_memory,
+        used_memory,
     };
 
     let distro: String = "Distro: ".to_owned() + &*system_info.distro;
@@ -44,7 +50,11 @@ pub(crate) fn main() {
     let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
     let kernel: String = "Kernel: ".to_owned() + &*system_info.kernel;
     let gpus: String = "GPUs: ".to_owned() + &*system_info.gpus.join("\n");
-
+    let total_memory_parsed = system_info.total_memory as f64 / 1024.0 / 1024.0 / 1024.0;
+    let used_memory_parsed = system_info.used_memory as f64 / 1024.0 / 1024.0 / 1024.0;
+    let memory: String = "".to_owned()
+        + "Memory: "
+        + &*format!("{:.2} GiB/{:.2} GiB", used_memory_parsed, total_memory_parsed);
 
 
     let final_fetch: String = "".to_owned()
@@ -52,7 +62,8 @@ pub(crate) fn main() {
         + &*cpu + "\n"
         + &*motherboard + "\n"
         + &*kernel + "\n"
-        + &*gpus;
+        + &*gpus + "\n"
+        + &*memory + "\n";
 
     println!("{}", final_fetch);
 }
@@ -93,4 +104,14 @@ fn get_gpus() -> Vec<String> {
     }
 
     names
+}
+
+fn get_total_memory() -> u64 {
+    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    sys.total_memory()
+}
+
+fn get_used_memory() -> u64 {
+    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    sys.used_memory()
 }
