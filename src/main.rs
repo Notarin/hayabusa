@@ -9,7 +9,7 @@ struct Args {
 }
 
 fn main() {
-    let args = Args::parse();
+    let args: Args = Args::parse();
     //daemon mode is the system service that tracks system info
     if args.daemon {
         println!("Running as daemon");
