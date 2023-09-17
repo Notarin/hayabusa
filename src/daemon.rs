@@ -12,9 +12,10 @@ lazy_static! {
 }
 
 pub(crate) fn main() {
-    let mut sys: MutexGuard<System> = SYS.lock().unwrap();
-    sys.refresh_all();
-
+    {
+        let mut sys: MutexGuard<System> = SYS.lock().unwrap();
+        sys.refresh_all();
+    }
     let cpu: String = get_cpu_name();
     let distro: String = get_distro();
 
