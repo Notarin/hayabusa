@@ -20,7 +20,7 @@ pub(crate) fn main() {
     }
     let cpu: String = get_cpu_name();
     let distro: String = get_distro();
-    let motherboard: String = get_mobo();
+    let motherboard: String = get_motherboard();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -50,7 +50,7 @@ fn get_distro() -> String {
 }
 
 #[cfg(target_os = "linux")]
-fn get_mobo() -> String {
+fn get_motherboard() -> String {
     fs::read_to_string("/sys/class/dmi/id/board_name")
         .unwrap_or(String::from("Unknown"))
         .trim()
