@@ -1,10 +1,12 @@
 use std::sync::{Mutex, MutexGuard};
 use lazy_static::lazy_static;
 use sysinfo::{CpuExt, System, SystemExt};
+use std::fs;
 
 struct SystemInfo {
     cpu: String,
     distro: String,
+    motherboard: String,
 }
 
 lazy_static! {
@@ -18,15 +20,21 @@ pub(crate) fn main() {
     }
     let cpu: String = get_cpu_name();
     let distro: String = get_distro();
+    let motherboard: String = get_mobo();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
         distro,
+        motherboard,
     };
 
     let distro: String = "Distro: ".to_owned() + &*system_info.distro;
     let cpu: String = "CPU: ".to_owned() + &*system_info.cpu;
-    let final_fetch: String = distro + "\n" + &*cpu;
+    let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
+    let final_fetch: String = "".to_owned()
+        + &*distro + "\n"
+        + &*cpu + "\n"
+        + &*motherboard;
 
     println!("{}", final_fetch);
 }
@@ -39,4 +47,12 @@ fn get_cpu_name() -> String {
 fn get_distro() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.name().unwrap_or(String::from("Unknown"))
+}
+
+#[cfg(target_os = "linux")]
+fn get_mobo() -> String {
+    fs::read_to_string("/sys/class/dmi/id/board_name")
+        .unwrap_or(String::from("Unknown"))
+        .trim()
+        .to_string()
 }
