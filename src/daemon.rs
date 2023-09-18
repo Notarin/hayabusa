@@ -59,14 +59,14 @@ pub(crate) fn main() {
     let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
     let kernel: String = "Kernel: ".to_owned() + &*system_info.kernel;
     let gpus: String = "GPU: ".to_owned() + &*system_info.gpus.join("\n");
-    let total_memory_parsed = system_info.total_memory as f64 / 1024.0 / 1024.0 / 1024.0;
-    let used_memory_parsed = system_info.used_memory as f64 / 1024.0 / 1024.0 / 1024.0;
+    let total_memory_parsed: f64 = system_info.total_memory as f64 / 1024.0 / 1024.0 / 1024.0;
+    let used_memory_parsed: f64 = system_info.used_memory as f64 / 1024.0 / 1024.0 / 1024.0;
     let memory: String = "".to_owned()
         + "Memory: "
         + &*format!("{:.2} GiB/{:.2} GiB", used_memory_parsed, total_memory_parsed);
     let disks: String = system_info.disks.iter().cloned().map(|disk| {
-        let used_parsed = disk.used as f64 / 1024.0 / 1024.0 / 1024.0;
-        let total_parsed = disk.total as f64 / 1024.0 / 1024.0 / 1024.0;
+        let used_parsed: f64 = disk.used as f64 / 1024.0 / 1024.0 / 1024.0;
+        let total_parsed: f64 = disk.total as f64 / 1024.0 / 1024.0 / 1024.0;
         format!("Disk: {}: {:.2} GiB/{:.2} GiB", disk.name, used_parsed, total_parsed)
     }).collect::<Vec<String>>().join("\n");
 
