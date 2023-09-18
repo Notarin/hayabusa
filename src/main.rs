@@ -9,12 +9,13 @@ struct Args {
     daemon: bool,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args: Args = Args::parse();
     //daemon mode is the system service that tracks system info
     if args.daemon {
         println!("Running as daemon");
-        daemon::main();
+        daemon::main().await;
     } else {
         println!("Running as normal");
     }

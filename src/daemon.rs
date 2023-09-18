@@ -7,6 +7,7 @@ use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan as back;
 use gfx_hal::Instance;
 use local_ip_address::local_ip;
+use tokio::task;
 
 
 struct SystemInfo {
@@ -36,22 +37,34 @@ lazy_static! {
     static ref SYS: Mutex<System> = Mutex::new(System::new_all());
 }
 
-pub(crate) fn main() {
+pub(crate) async fn main() {
     {
         let mut sys: MutexGuard<System> = SYS.lock().unwrap();
         sys.refresh_all();
     }
-    let cpu: String = get_cpu_name();
-    let distro: String = get_distro();
-    let motherboard: String = get_motherboard();
-    let kernel: String = get_kernel();
-    let gpus: Vec<String> = get_gpus();
-    let memory: Memory = Memory {
-        used: get_used_memory(),
-        total: get_total_memory(),
-    };
-    let disks: Vec<Disk> = get_disks();
-    let local_ip: String = get_local_ip_address();
+
+    let cpu_future = task::spawn(get_cpu_name());
+    let distro_future = task::spawn(get_distro());
+    let motherboard_future = task::spawn(get_motherboard());
+    let kernel_future = task::spawn(get_kernel());
+    let gpus_future = task::spawn(get_gpus());
+    let memory_future = task::spawn(async {
+        Memory {
+            used: get_used_memory().await,
+            total: get_total_memory().await,
+        }
+    });
+    let disks_future = task::spawn(get_disks());
+    let local_ip_future = task::spawn(get_local_ip_address());
+
+    let cpu: String = cpu_future.await.unwrap();
+    let distro: String = distro_future.await.unwrap();
+    let motherboard: String = motherboard_future.await.unwrap();
+    let kernel: String = kernel_future.await.unwrap();
+    let gpus: Vec<String> = gpus_future.await.unwrap();
+    let memory: Memory = memory_future.await.unwrap();
+    let disks: Vec<Disk> = disks_future.await.unwrap();
+    let local_ip: String = local_ip_future.await.unwrap();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -95,18 +108,18 @@ pub(crate) fn main() {
     println!("{}", final_fetch);
 }
 
-fn get_cpu_name() -> String {
+async fn get_cpu_name() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.global_cpu_info().brand().to_string()
 }
 
-fn get_distro() -> String {
+async fn get_distro() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.name().unwrap_or(String::from("Unknown"))
 }
 
 #[cfg(target_os = "linux")]
-fn get_motherboard() -> String {
+async fn get_motherboard() -> String {
     use std::fs;
     fs::read_to_string("/sys/class/dmi/id/board_name")
         .unwrap_or(String::from("Unknown"))
@@ -115,7 +128,7 @@ fn get_motherboard() -> String {
 }
 
 #[cfg(target_os = "windows")]
-fn get_motherboard() -> String {
+async fn get_motherboard() -> String {
     use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 
     let local_machine_key: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
@@ -132,12 +145,12 @@ fn get_motherboard() -> String {
     }
 }
 
-fn get_kernel() -> String {
+async fn get_kernel() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.kernel_version().unwrap_or(String::from("Unknown"))
 }
 
-fn get_gpus() -> Vec<String> {
+async fn get_gpus() -> Vec<String> {
 
     let instance: gfx_backend_vulkan::Instance =
         back::Instance::create("hayabusa", 1).unwrap();
@@ -152,17 +165,17 @@ fn get_gpus() -> Vec<String> {
     names
 }
 
-fn get_total_memory() -> u64 {
+async fn get_total_memory() -> u64 {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.total_memory()
 }
 
-fn get_used_memory() -> u64 {
+async fn get_used_memory() -> u64 {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.used_memory()
 }
 
-fn get_disks() -> Vec<Disk> {
+async fn get_disks() -> Vec<Disk> {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     let sys_disks: &[sysinfo::Disk] = sys.disks();
     let mut disks: Vec<Disk> = Vec::new();
@@ -180,7 +193,7 @@ fn get_disks() -> Vec<Disk> {
     disks
 }
 
-fn get_local_ip_address() -> String {
+async fn get_local_ip_address() -> String {
     let local_ip: IpAddr = local_ip().unwrap();
     local_ip.to_string()
 }
