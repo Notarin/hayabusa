@@ -58,7 +58,7 @@ pub(crate) fn main() {
     let cpu: String = "CPU: ".to_owned() + &*system_info.cpu;
     let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
     let kernel: String = "Kernel: ".to_owned() + &*system_info.kernel;
-    let gpus: String = "GPUs: ".to_owned() + &*system_info.gpus.join("\n");
+    let gpus: String = "GPU: ".to_owned() + &*system_info.gpus.join("\n");
     let total_memory_parsed = system_info.total_memory as f64 / 1024.0 / 1024.0 / 1024.0;
     let used_memory_parsed = system_info.used_memory as f64 / 1024.0 / 1024.0 / 1024.0;
     let memory: String = "".to_owned()
