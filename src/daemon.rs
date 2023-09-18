@@ -1,3 +1,4 @@
+use std::net::IpAddr;
 use std::sync::{Mutex, MutexGuard};
 use lazy_static::lazy_static;
 use sysinfo::{CpuExt, DiskExt, System, SystemExt};
@@ -5,6 +6,7 @@ use gfx_backend_vulkan::Backend;
 use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan as back;
 use gfx_hal::Instance;
+use local_ip_address::local_ip;
 
 
 struct SystemInfo {
@@ -15,6 +17,7 @@ struct SystemInfo {
     gpus: Vec<String>,
     memory: Memory,
     disks: Vec<Disk>,
+    local_ip: String,
 }
 
 #[derive(Clone)]
@@ -48,6 +51,7 @@ pub(crate) fn main() {
         total: get_total_memory(),
     };
     let disks: Vec<Disk> = get_disks();
+    let local_ip: String = get_local_ip_address();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -57,6 +61,7 @@ pub(crate) fn main() {
         gpus,
         memory,
         disks,
+        local_ip,
     };
 
     let distro: String = "Distro: ".to_owned() + &*system_info.distro;
@@ -74,6 +79,7 @@ pub(crate) fn main() {
         let total_parsed: f64 = disk.total as f64 / 1024.0 / 1024.0 / 1024.0;
         format!("Disk: {}: {:.2} GiB/{:.2} GiB", disk.name, used_parsed, total_parsed)
     }).collect::<Vec<String>>().join("\n");
+    let local_ip: String = "Local IP: ".to_owned() + &*system_info.local_ip;
 
 
     let final_fetch: String = "".to_owned()
@@ -83,7 +89,8 @@ pub(crate) fn main() {
         + &*kernel + "\n"
         + &*gpus + "\n"
         + &*memory + "\n"
-        + &*disks;
+        + &*disks + "\n"
+        + &*local_ip;
 
     println!("{}", final_fetch);
 }
@@ -171,4 +178,9 @@ fn get_disks() -> Vec<Disk> {
         disks.push(disk);
     }
     disks
+}
+
+fn get_local_ip_address() -> String {
+    let local_ip: IpAddr = local_ip().unwrap();
+    local_ip.to_string()
 }
