@@ -1,7 +1,6 @@
 use std::sync::{Mutex, MutexGuard};
 use lazy_static::lazy_static;
 use sysinfo::{CpuExt, DiskExt, System, SystemExt};
-use std::fs;
 use gfx_backend_vulkan::Backend;
 use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan as back;
@@ -96,10 +95,29 @@ fn get_distro() -> String {
 
 #[cfg(target_os = "linux")]
 fn get_motherboard() -> String {
+    use std::fs;
     fs::read_to_string("/sys/class/dmi/id/board_name")
         .unwrap_or(String::from("Unknown"))
         .trim()
         .to_string()
+}
+
+#[cfg(target_os = "windows")]
+fn get_motherboard() -> String {
+    use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
+
+    let local_machine_key: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let path: &str = r"SYSTEM\HardwareConfig\Current";
+
+    match local_machine_key.open_subkey(path) {
+        Ok(sub_key) => {
+            match sub_key.get_value("BaseBoardProduct") {
+                Ok(name) => name,
+                Err(_) => String::from("Unknown"),
+            }
+        }
+        Err(_) => String::from("Unknown"),
+    }
 }
 
 fn get_kernel() -> String {
