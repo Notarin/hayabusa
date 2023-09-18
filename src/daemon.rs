@@ -13,14 +13,18 @@ struct SystemInfo {
     motherboard: String,
     kernel: String,
     gpus: Vec<String>,
-    total_memory: u64,
-    used_memory: u64,
+    memory: Memory,
     disks: Vec<Disk>,
 }
 
 #[derive(Clone)]
 struct Disk {
     name: String,
+    used: u64,
+    total: u64,
+}
+
+struct Memory {
     used: u64,
     total: u64,
 }
@@ -39,8 +43,10 @@ pub(crate) fn main() {
     let motherboard: String = get_motherboard();
     let kernel: String = get_kernel();
     let gpus: Vec<String> = get_gpus();
-    let total_memory: u64 = get_total_memory();
-    let used_memory: u64 = get_used_memory();
+    let memory: Memory = Memory {
+        used: get_used_memory(),
+        total: get_total_memory(),
+    };
     let disks: Vec<Disk> = get_disks();
 
     let system_info: SystemInfo = SystemInfo {
@@ -49,8 +55,7 @@ pub(crate) fn main() {
         motherboard,
         kernel,
         gpus,
-        total_memory,
-        used_memory,
+        memory,
         disks,
     };
 
@@ -59,8 +64,8 @@ pub(crate) fn main() {
     let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
     let kernel: String = "Kernel: ".to_owned() + &*system_info.kernel;
     let gpus: String = "GPU: ".to_owned() + &*system_info.gpus.join("\n");
-    let total_memory_parsed: f64 = system_info.total_memory as f64 / 1024.0 / 1024.0 / 1024.0;
-    let used_memory_parsed: f64 = system_info.used_memory as f64 / 1024.0 / 1024.0 / 1024.0;
+    let total_memory_parsed: f64 = system_info.memory.total as f64 / 1024.0 / 1024.0 / 1024.0;
+    let used_memory_parsed: f64 = system_info.memory.used as f64 / 1024.0 / 1024.0 / 1024.0;
     let memory: String = "".to_owned()
         + "Memory: "
         + &*format!("{:.2} GiB/{:.2} GiB", used_memory_parsed, total_memory_parsed);
