@@ -1,6 +1,6 @@
 use std::sync::{Mutex, MutexGuard};
 use lazy_static::lazy_static;
-use sysinfo::{CpuExt, System, SystemExt};
+use sysinfo::{CpuExt, DiskExt, System, SystemExt};
 use std::fs;
 use gfx_backend_vulkan::Backend;
 use gfx_hal::adapter::Adapter;
@@ -16,6 +16,14 @@ struct SystemInfo {
     gpus: Vec<String>,
     total_memory: u64,
     used_memory: u64,
+    disks: Vec<Disk>,
+}
+
+#[derive(Clone)]
+struct Disk {
+    name: String,
+    used: u64,
+    total: u64,
 }
 
 lazy_static! {
@@ -34,6 +42,7 @@ pub(crate) fn main() {
     let gpus: Vec<String> = get_gpus();
     let total_memory: u64 = get_total_memory();
     let used_memory: u64 = get_used_memory();
+    let disks: Vec<Disk> = get_disks();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -43,6 +52,7 @@ pub(crate) fn main() {
         gpus,
         total_memory,
         used_memory,
+        disks,
     };
 
     let distro: String = "Distro: ".to_owned() + &*system_info.distro;
@@ -55,6 +65,11 @@ pub(crate) fn main() {
     let memory: String = "".to_owned()
         + "Memory: "
         + &*format!("{:.2} GiB/{:.2} GiB", used_memory_parsed, total_memory_parsed);
+    let disks: String = system_info.disks.iter().cloned().map(|disk| {
+        let used_parsed = disk.used as f64 / 1024.0 / 1024.0 / 1024.0;
+        let total_parsed = disk.total as f64 / 1024.0 / 1024.0 / 1024.0;
+        format!("Disk: {}: {:.2} GiB/{:.2} GiB", disk.name, used_parsed, total_parsed)
+    }).collect::<Vec<String>>().join("\n");
 
 
     let final_fetch: String = "".to_owned()
@@ -63,7 +78,8 @@ pub(crate) fn main() {
         + &*motherboard + "\n"
         + &*kernel + "\n"
         + &*gpus + "\n"
-        + &*memory + "\n";
+        + &*memory + "\n"
+        + &*disks;
 
     println!("{}", final_fetch);
 }
@@ -114,4 +130,22 @@ fn get_total_memory() -> u64 {
 fn get_used_memory() -> u64 {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.used_memory()
+}
+
+fn get_disks() -> Vec<Disk> {
+    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys_disks: &[sysinfo::Disk] = sys.disks();
+    let mut disks: Vec<Disk> = Vec::new();
+    for disk in sys_disks {
+        let name: String = disk.mount_point().to_string_lossy().to_string();
+        let used: u64 = disk.total_space() - disk.available_space();
+        let total: u64 = disk.total_space();
+        let disk: Disk = Disk {
+            name,
+            used,
+            total,
+        };
+        disks.push(disk);
+    }
+    disks
 }
