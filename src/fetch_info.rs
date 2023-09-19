@@ -57,7 +57,7 @@ pub async fn get_motherboard() -> String {
 }
 
 #[cfg(target_os = "windows")]
-async fn get_motherboard() -> String {
+pub async fn get_motherboard() -> String {
     use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 
     let local_machine_key: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
