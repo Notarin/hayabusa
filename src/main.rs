@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 mod daemon;
+mod fetch_info;
 
 use clap::Parser;
 

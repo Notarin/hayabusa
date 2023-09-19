@@ -1,17 +1,9 @@
-use std::net::IpAddr;
-use std::sync::{Mutex, MutexGuard};
-use std::time::Duration;
-use lazy_static::lazy_static;
-use sysinfo::{CpuExt, DiskExt, System, SystemExt};
-use gfx_backend_vulkan::Backend;
-use gfx_hal::adapter::Adapter;
-use gfx_backend_vulkan as back;
-use gfx_hal::Instance;
-use local_ip_address::local_ip;
-use reqwest::{Client};
+use std::sync::{MutexGuard};
+use sysinfo::{System, SystemExt};
 use tokio::task;
 use tokio::task::JoinHandle;
-
+use crate::fetch_info;
+use crate::fetch_info::{SYS};
 
 struct SystemInfo {
     cpu: String,
@@ -26,19 +18,15 @@ struct SystemInfo {
 }
 
 #[derive(Clone)]
-struct Disk {
-    name: String,
-    used: u64,
-    total: u64,
+pub struct Disk {
+    pub(crate) name: String,
+    pub(crate) used: u64,
+    pub(crate) total: u64,
 }
 
 struct Memory {
     used: u64,
     total: u64,
-}
-
-lazy_static! {
-    static ref SYS: Mutex<System> = Mutex::new(System::new_all());
 }
 
 pub(crate) async fn main() {
@@ -47,20 +35,20 @@ pub(crate) async fn main() {
         sys.refresh_all();
     }
 
-    let cpu_future: JoinHandle<String> = task::spawn(get_cpu_name());
-    let distro_future: JoinHandle<String> = task::spawn(get_distro());
-    let motherboard_future: JoinHandle<String> = task::spawn(get_motherboard());
-    let kernel_future: JoinHandle<String> = task::spawn(get_kernel());
-    let gpus_future: JoinHandle<Vec<String>> = task::spawn(get_gpus());
+    let cpu_future: JoinHandle<String> = task::spawn(fetch_info::get_cpu_name());
+    let distro_future: JoinHandle<String> = task::spawn(fetch_info::get_distro());
+    let motherboard_future: JoinHandle<String> = task::spawn(fetch_info::get_motherboard());
+    let kernel_future: JoinHandle<String> = task::spawn(fetch_info::get_kernel());
+    let gpus_future: JoinHandle<Vec<String>> = task::spawn(fetch_info::get_gpus());
     let memory_future: JoinHandle<Memory> = task::spawn(async {
         Memory {
-            used: get_used_memory().await,
-            total: get_total_memory().await,
+            used: fetch_info::get_used_memory().await,
+            total: fetch_info::get_total_memory().await,
         }
     });
-    let disks_future: JoinHandle<Vec<Disk>> = task::spawn(get_disks());
-    let local_ip_future: JoinHandle<String> = task::spawn(get_local_ip_address());
-    let public_ip_future: JoinHandle<String> = task::spawn(get_public_ip_address());
+    let disks_future: JoinHandle<Vec<Disk>> = task::spawn(fetch_info::get_disks());
+    let local_ip_future: JoinHandle<String> = task::spawn(fetch_info::get_local_ip_address());
+    let public_ip_future: JoinHandle<String> = task::spawn(fetch_info::get_public_ip_address());
 
     let cpu: String = cpu_future.await.unwrap();
     let distro: String = distro_future.await.unwrap();
@@ -115,104 +103,4 @@ pub(crate) async fn main() {
         + &*public_ip;
 
     println!("{}", final_fetch);
-}
-
-async fn get_cpu_name() -> String {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
-    sys.global_cpu_info().brand().to_string()
-}
-
-async fn get_distro() -> String {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
-    sys.name().unwrap_or(String::from("Unknown"))
-}
-
-#[cfg(target_os = "linux")]
-async fn get_motherboard() -> String {
-    use std::fs;
-    fs::read_to_string("/sys/class/dmi/id/board_name")
-        .unwrap_or(String::from("Unknown"))
-        .trim()
-        .to_string()
-}
-
-#[cfg(target_os = "windows")]
-async fn get_motherboard() -> String {
-    use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
-
-    let local_machine_key: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let path: &str = r"SYSTEM\HardwareConfig\Current";
-
-    match local_machine_key.open_subkey(path) {
-        Ok(sub_key) => {
-            match sub_key.get_value("BaseBoardProduct") {
-                Ok(name) => name,
-                Err(_) => String::from("Unknown"),
-            }
-        }
-        Err(_) => String::from("Unknown"),
-    }
-}
-
-async fn get_kernel() -> String {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
-    sys.kernel_version().unwrap_or(String::from("Unknown"))
-}
-
-async fn get_gpus() -> Vec<String> {
-
-    let instance: gfx_backend_vulkan::Instance =
-        back::Instance::create("hayabusa", 1).unwrap();
-    let adapters: Vec<Adapter<Backend>> = instance.enumerate_adapters();
-
-    let mut names: Vec<String> = Vec::new();
-
-    for adapter in adapters {
-        names.push(adapter.info.name.to_string());
-    }
-
-    names
-}
-
-async fn get_total_memory() -> u64 {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
-    sys.total_memory()
-}
-
-async fn get_used_memory() -> u64 {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
-    sys.used_memory()
-}
-
-async fn get_disks() -> Vec<Disk> {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
-    let sys_disks: &[sysinfo::Disk] = sys.disks();
-    let mut disks: Vec<Disk> = Vec::new();
-    for disk in sys_disks {
-        let name: String = disk.mount_point().to_string_lossy().to_string();
-        let used: u64 = disk.total_space() - disk.available_space();
-        let total: u64 = disk.total_space();
-        let disk: Disk = Disk {
-            name,
-            used,
-            total,
-        };
-        disks.push(disk);
-    }
-    disks
-}
-
-async fn get_local_ip_address() -> String {
-    let local_ip: IpAddr = local_ip().unwrap();
-    local_ip.to_string()
-}
-
-async fn get_public_ip_address() -> String {
-    let client: Client = Client::builder().timeout(Duration::from_secs(5))
-        .build()
-        .unwrap();
-    match client.get("https://ident.me").send().await {
-        Ok(res) => res.text().await.unwrap(),
-        Err(_) => "Unknown".to_string(),
-    }
 }
