@@ -10,6 +10,7 @@ use gfx_hal::Instance;
 use local_ip_address::local_ip;
 use reqwest::{Client};
 use tokio::task;
+use tokio::task::JoinHandle;
 
 
 struct SystemInfo {
@@ -46,20 +47,20 @@ pub(crate) async fn main() {
         sys.refresh_all();
     }
 
-    let cpu_future = task::spawn(get_cpu_name());
-    let distro_future = task::spawn(get_distro());
-    let motherboard_future = task::spawn(get_motherboard());
-    let kernel_future = task::spawn(get_kernel());
-    let gpus_future = task::spawn(get_gpus());
-    let memory_future = task::spawn(async {
+    let cpu_future: JoinHandle<String> = task::spawn(get_cpu_name());
+    let distro_future: JoinHandle<String> = task::spawn(get_distro());
+    let motherboard_future: JoinHandle<String> = task::spawn(get_motherboard());
+    let kernel_future: JoinHandle<String> = task::spawn(get_kernel());
+    let gpus_future: JoinHandle<Vec<String>> = task::spawn(get_gpus());
+    let memory_future: JoinHandle<Memory> = task::spawn(async {
         Memory {
             used: get_used_memory().await,
             total: get_total_memory().await,
         }
     });
-    let disks_future = task::spawn(get_disks());
-    let local_ip_future = task::spawn(get_local_ip_address());
-    let public_ip_future = task::spawn(get_public_ip_address());
+    let disks_future: JoinHandle<Vec<Disk>> = task::spawn(get_disks());
+    let local_ip_future: JoinHandle<String> = task::spawn(get_local_ip_address());
+    let public_ip_future: JoinHandle<String> = task::spawn(get_public_ip_address());
 
     let cpu: String = cpu_future.await.unwrap();
     let distro: String = distro_future.await.unwrap();
