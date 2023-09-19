@@ -1,33 +1,9 @@
-use std::sync::{MutexGuard};
+use std::sync::MutexGuard;
 use sysinfo::{System, SystemExt};
 use tokio::task;
 use tokio::task::JoinHandle;
 use crate::fetch_info;
-use crate::fetch_info::{SYS};
-
-struct SystemInfo {
-    cpu: String,
-    distro: String,
-    motherboard: String,
-    kernel: String,
-    gpus: Vec<String>,
-    memory: Memory,
-    disks: Vec<Disk>,
-    local_ip: String,
-    public_ip: String,
-}
-
-#[derive(Clone)]
-pub struct Disk {
-    pub(crate) name: String,
-    pub(crate) used: u64,
-    pub(crate) total: u64,
-}
-
-struct Memory {
-    used: u64,
-    total: u64,
-}
+use crate::fetch_info::{Disk, Memory, SYS, SystemInfo};
 
 pub(crate) async fn main() {
     {

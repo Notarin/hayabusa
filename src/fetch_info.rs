@@ -8,10 +8,33 @@ use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan::Backend;
 use gfx_hal::Instance;
 use lazy_static::lazy_static;
-use crate::daemon::Disk;
 
 lazy_static! {
     pub (crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
+}
+
+pub struct SystemInfo {
+    pub(crate) cpu: String,
+    pub(crate) distro: String,
+    pub(crate) motherboard: String,
+    pub(crate) kernel: String,
+    pub(crate) gpus: Vec<String>,
+    pub(crate) memory: Memory,
+    pub(crate) disks: Vec<Disk>,
+    pub(crate) local_ip: String,
+    pub(crate) public_ip: String,
+}
+
+#[derive(Clone)]
+pub struct Disk {
+    pub(crate) name: String,
+    pub(crate) used: u64,
+    pub(crate) total: u64,
+}
+
+pub struct Memory {
+    pub(crate) used: u64,
+    pub(crate) total: u64,
 }
 
 pub async fn get_cpu_name() -> String {
