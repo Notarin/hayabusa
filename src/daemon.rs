@@ -1,5 +1,6 @@
 use std::net::IpAddr;
 use std::sync::{Mutex, MutexGuard};
+use std::time::Duration;
 use lazy_static::lazy_static;
 use sysinfo::{CpuExt, DiskExt, System, SystemExt};
 use gfx_backend_vulkan::Backend;
@@ -7,6 +8,7 @@ use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan as back;
 use gfx_hal::Instance;
 use local_ip_address::local_ip;
+use reqwest::{Client};
 use tokio::task;
 
 
@@ -19,6 +21,7 @@ struct SystemInfo {
     memory: Memory,
     disks: Vec<Disk>,
     local_ip: String,
+    public_ip: String,
 }
 
 #[derive(Clone)]
@@ -56,6 +59,7 @@ pub(crate) async fn main() {
     });
     let disks_future = task::spawn(get_disks());
     let local_ip_future = task::spawn(get_local_ip_address());
+    let public_ip_future = task::spawn(get_public_ip_address());
 
     let cpu: String = cpu_future.await.unwrap();
     let distro: String = distro_future.await.unwrap();
@@ -65,6 +69,7 @@ pub(crate) async fn main() {
     let memory: Memory = memory_future.await.unwrap();
     let disks: Vec<Disk> = disks_future.await.unwrap();
     let local_ip: String = local_ip_future.await.unwrap();
+    let public_ip: String = public_ip_future.await.unwrap();
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -75,6 +80,7 @@ pub(crate) async fn main() {
         memory,
         disks,
         local_ip,
+        public_ip,
     };
 
     let distro: String = "Distro: ".to_owned() + &*system_info.distro;
@@ -93,6 +99,7 @@ pub(crate) async fn main() {
         format!("Disk: {}: {:.2} GiB/{:.2} GiB", disk.name, used_parsed, total_parsed)
     }).collect::<Vec<String>>().join("\n");
     let local_ip: String = "Local IP: ".to_owned() + &*system_info.local_ip;
+    let public_ip: String = "Public IP: ".to_owned() + &*system_info.public_ip;
 
 
     let final_fetch: String = "".to_owned()
@@ -103,7 +110,8 @@ pub(crate) async fn main() {
         + &*gpus + "\n"
         + &*memory + "\n"
         + &*disks + "\n"
-        + &*local_ip;
+        + &*local_ip + "\n"
+        + &*public_ip;
 
     println!("{}", final_fetch);
 }
@@ -196,4 +204,14 @@ async fn get_disks() -> Vec<Disk> {
 async fn get_local_ip_address() -> String {
     let local_ip: IpAddr = local_ip().unwrap();
     local_ip.to_string()
+}
+
+async fn get_public_ip_address() -> String {
+    let client: Client = Client::builder().timeout(Duration::from_secs(5))
+        .build()
+        .unwrap();
+    match client.get("https://ident.me").send().await {
+        Ok(res) => res.text().await.unwrap(),
+        Err(_) => "Unknown".to_string(),
+    }
 }
