@@ -9,7 +9,7 @@ use crate::fetch_info::{Disk, Memory, SYS, SystemInfo};
 
 pub(crate) async fn main() {
     {
-        let mut sys: MutexGuard<System> = SYS.lock().unwrap();
+        let mut sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
         sys.refresh_all();
     }
 
@@ -28,15 +28,15 @@ pub(crate) async fn main() {
     let local_ip_future: JoinHandle<String> = task::spawn(fetch_info::get_local_ip_address());
     let public_ip_future: JoinHandle<String> = task::spawn(fetch_info::get_public_ip_address());
 
-    let cpu: String = cpu_future.await.unwrap();
-    let distro: String = distro_future.await.unwrap();
-    let motherboard: String = motherboard_future.await.unwrap();
-    let kernel: String = kernel_future.await.unwrap();
-    let gpus: Vec<String> = gpus_future.await.unwrap();
-    let memory: Memory = memory_future.await.unwrap();
-    let disks: Vec<Disk> = disks_future.await.unwrap();
-    let local_ip: String = local_ip_future.await.unwrap();
-    let public_ip: String = public_ip_future.await.unwrap();
+    let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
+    let distro: String = distro_future.await.expect("get_distro thread panicked!");
+    let motherboard: String = motherboard_future.await.expect("get_motherboard thread panicked!");
+    let kernel: String = kernel_future.await.expect("get_kernel thread panicked!");
+    let gpus: Vec<String> = gpus_future.await.expect("get_gpus thread panicked!");
+    let memory: Memory = memory_future.await.expect("get_memory thread panicked!");
+    let disks: Vec<Disk> = disks_future.await.expect("get_disks thread panicked!");
+    let local_ip: String = local_ip_future.await.expect("get_local_ip_address thread panicked!");
+    let public_ip: String = public_ip_future.await.expect("get_public_ip_address thread panicked!");
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -82,7 +82,8 @@ pub(crate) async fn main() {
 
     let socket_path: String;
     {
-        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock().unwrap();
+        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock()
+            .expect("Failed to lock socket path mutex");
         socket_path = socket_path_mutex.clone();
     }
 
@@ -91,7 +92,8 @@ pub(crate) async fn main() {
         std::fs::remove_file(&socket_path).expect("Failed to remove socket");
     }
 
-    let listener: LocalSocketListener = LocalSocketListener::bind(socket_path.clone()).unwrap();
+    let listener: LocalSocketListener = LocalSocketListener::bind(socket_path.clone())
+        .expect("Failed to bind to socket");
     println!("Listening on {}", socket_path.clone());
     for stream in listener.incoming() {
         let mut client: LocalSocketStream = stream.expect("Failed to connect to client");

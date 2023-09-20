@@ -7,7 +7,8 @@ use crate::SOCKET_PATH;
 pub(crate) fn main() {
     let socket_path: String;
     {
-        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock().unwrap();
+        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock()
+            .expect("Failed to lock socket path mutex");
         socket_path = socket_path_mutex.clone();
     }
     let mut client: LocalSocketStream = LocalSocketStream::connect(socket_path.clone())
@@ -19,7 +20,7 @@ pub(crate) fn main() {
             std::process::exit(1);
         });
     let mut buffer: Vec<u8> = vec![0u8; 65536];
-    client.read(&mut buffer).unwrap();
+    client.read(&mut buffer).expect("Failed to read from socket");
     let string: Cow<str> = String::from_utf8_lossy(&buffer);
     println!("{}", string);
 }

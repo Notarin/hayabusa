@@ -38,12 +38,12 @@ pub(crate) struct Memory {
 }
 
 pub(crate) async fn get_cpu_name() -> String {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
     sys.global_cpu_info().brand().to_string()
 }
 
 pub(crate) async fn get_distro() -> String {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
     sys.name().unwrap_or(String::from("Unknown"))
 }
 
@@ -75,14 +75,14 @@ pub(crate) async fn get_motherboard() -> String {
 }
 
 pub(crate) async fn get_kernel() -> String {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
     sys.kernel_version().unwrap_or(String::from("Unknown"))
 }
 
 pub(crate) async fn get_gpus() -> Vec<String> {
 
     let instance: gfx_backend_vulkan::Instance =
-        Instance::create("hayabusa", 1).unwrap();
+        Instance::create("hayabusa", 1).expect("Failed to create Vulkan instance");
     let adapters: Vec<Adapter<Backend>> = instance.enumerate_adapters();
 
     let mut names: Vec<String> = Vec::new();
@@ -95,17 +95,17 @@ pub(crate) async fn get_gpus() -> Vec<String> {
 }
 
 pub(crate) async fn get_total_memory() -> u64 {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
     sys.total_memory()
 }
 
 pub(crate) async fn get_used_memory() -> u64 {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
     sys.used_memory()
 }
 
 pub(crate) async fn get_disks() -> Vec<Disk> {
-    let sys: MutexGuard<System> = SYS.lock().unwrap();
+    let sys: MutexGuard<System> = SYS.lock().expect("Failed to lock sys-info mutex");
     let sys_disks: &[sysinfo::Disk] = sys.disks();
     let mut disks: Vec<Disk> = Vec::new();
     for disk in sys_disks {
@@ -123,16 +123,16 @@ pub(crate) async fn get_disks() -> Vec<Disk> {
 }
 
 pub(crate) async fn get_local_ip_address() -> String {
-    let local_ip: IpAddr = local_ip().unwrap();
+    let local_ip: IpAddr = local_ip().expect("Failed to get local IP address");
     local_ip.to_string()
 }
 
 pub(crate) async fn get_public_ip_address() -> String {
     let client: Client = Client::builder().timeout(Duration::from_secs(5))
         .build()
-        .unwrap();
+        .expect("Failed to build reqwest client");
     match client.get("https://ident.me").send().await {
-        Ok(res) => res.text().await.unwrap(),
+        Ok(res) => res.text().await.expect("Failed to get public IP address"),
         Err(_) => "Unknown".to_string(),
     }
 }
