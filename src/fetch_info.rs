@@ -8,9 +8,10 @@ use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan::Backend;
 use gfx_hal::Instance;
 use lazy_static::lazy_static;
+use tokio::task::JoinHandle;
 
 lazy_static! {
-    pub (crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
+    pub(crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
 }
 
 pub(crate) struct SystemInfo {
@@ -35,6 +36,79 @@ pub(crate) struct Disk {
 pub(crate) struct Memory {
     pub(crate) used: u64,
     pub(crate) total: u64,
+}
+
+pub(crate) async fn fetch_all() -> SystemInfo {
+    let cpu_future: JoinHandle<String> = tokio::spawn(get_cpu_name());
+    let distro_future: JoinHandle<String> = tokio::spawn(get_distro());
+    let motherboard_future: JoinHandle<String> = tokio::spawn(get_motherboard());
+    let kernel_future: JoinHandle<String> = tokio::spawn(get_kernel());
+    let gpus_future: JoinHandle<Vec<String>> = tokio::spawn(get_gpus());
+    let memory_future: JoinHandle<Memory> = tokio::spawn(async {
+        Memory {
+            used: get_used_memory().await,
+            total: get_total_memory().await,
+        }
+    });
+    let disks_future: JoinHandle<Vec<Disk>> = tokio::spawn(get_disks());
+    let local_ip_future: JoinHandle<String> = tokio::spawn(get_local_ip_address());
+    let public_ip_future: JoinHandle<String> = tokio::spawn(get_public_ip_address());
+
+    let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
+    let distro: String = distro_future.await.expect("get_distro thread panicked!");
+    let motherboard: String = motherboard_future.await.expect("get_motherboard thread panicked!");
+    let kernel: String = kernel_future.await.expect("get_kernel thread panicked!");
+    let gpus: Vec<String> = gpus_future.await.expect("get_gpus thread panicked!");
+    let memory: Memory = memory_future.await.expect("get_memory thread panicked!");
+    let disks: Vec<Disk> = disks_future.await.expect("get_disks thread panicked!");
+    let local_ip: String = local_ip_future.await.expect("get_local_ip_address thread panicked!");
+    let public_ip: String = public_ip_future.await.expect("get_public_ip_address thread panicked!");
+
+    let system_info: SystemInfo = SystemInfo {
+        cpu,
+        distro,
+        motherboard,
+        kernel,
+        gpus,
+        memory,
+        disks,
+        local_ip,
+        public_ip,
+    };
+    system_info
+}
+
+pub(crate) fn compile_fetch(system_info: SystemInfo) -> String {
+    let distro: String = "Distro: ".to_owned() + &*system_info.distro;
+    let cpu: String = "CPU: ".to_owned() + &*system_info.cpu;
+    let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
+    let kernel: String = "Kernel: ".to_owned() + &*system_info.kernel;
+    let gpus: String = "GPU: ".to_owned() + &*system_info.gpus.join("\n");
+    let total_memory_parsed: f64 = system_info.memory.total as f64 / 1024.0 / 1024.0 / 1024.0;
+    let used_memory_parsed: f64 = system_info.memory.used as f64 / 1024.0 / 1024.0 / 1024.0;
+    let memory: String = "".to_owned()
+        + "Memory: "
+        + &*format!("{:.2} GiB/{:.2} GiB", used_memory_parsed, total_memory_parsed);
+    let disks: String = system_info.disks.iter().cloned().map(|disk| {
+        let used_parsed: f64 = disk.used as f64 / 1024.0 / 1024.0 / 1024.0;
+        let total_parsed: f64 = disk.total as f64 / 1024.0 / 1024.0 / 1024.0;
+        format!("Disk: {}: {:.2} GiB/{:.2} GiB", disk.name, used_parsed, total_parsed)
+    }).collect::<Vec<String>>().join("\n");
+    let local_ip: String = "Local IP: ".to_owned() + &*system_info.local_ip;
+    let public_ip: String = "Public IP: ".to_owned() + &*system_info.public_ip;
+
+
+    let final_fetch: String = "".to_owned()
+        + &*distro + "\n"
+        + &*cpu + "\n"
+        + &*motherboard + "\n"
+        + &*kernel + "\n"
+        + &*gpus + "\n"
+        + &*memory + "\n"
+        + &*disks + "\n"
+        + &*local_ip + "\n"
+        + &*public_ip;
+    final_fetch
 }
 
 pub(crate) async fn get_cpu_name() -> String {
