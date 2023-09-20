@@ -98,4 +98,5 @@ pub(crate) async fn main() {
         client.write_all(final_fetch.as_bytes()).expect("Failed to send message!");
         println!("Sent fetch!");
     }
+    unreachable!("Unexpected termination: Listener loop exited");
 }
