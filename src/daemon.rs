@@ -29,7 +29,7 @@ pub(crate) async fn main() {
 
     let listener: LocalSocketListener = LocalSocketListener::bind(socket_path.clone())
         .expect("Failed to bind to socket");
-    println!("Listening on {}", socket_path.clone());
+    println!("Listening on {}", socket_path);
     for stream in listener.incoming() {
         let mut client: LocalSocketStream = stream.expect("Failed to connect to client");
         client.write_all(final_fetch.as_bytes()).expect("Failed to send message!");
