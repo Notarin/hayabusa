@@ -4,7 +4,7 @@ use std::sync::MutexGuard;
 use interprocess::local_socket::LocalSocketStream;
 use crate::SOCKET_PATH;
 
-pub fn main() {
+pub(crate) fn main() {
     let socket_path: String;
     {
         let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock().unwrap();

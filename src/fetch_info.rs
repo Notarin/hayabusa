@@ -13,7 +13,7 @@ lazy_static! {
     pub (crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
 }
 
-pub struct SystemInfo {
+pub(crate) struct SystemInfo {
     pub(crate) cpu: String,
     pub(crate) distro: String,
     pub(crate) motherboard: String,
@@ -26,29 +26,29 @@ pub struct SystemInfo {
 }
 
 #[derive(Clone)]
-pub struct Disk {
+pub(crate) struct Disk {
     pub(crate) name: String,
     pub(crate) used: u64,
     pub(crate) total: u64,
 }
 
-pub struct Memory {
+pub(crate) struct Memory {
     pub(crate) used: u64,
     pub(crate) total: u64,
 }
 
-pub async fn get_cpu_name() -> String {
+pub(crate) async fn get_cpu_name() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.global_cpu_info().brand().to_string()
 }
 
-pub async fn get_distro() -> String {
+pub(crate) async fn get_distro() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.name().unwrap_or(String::from("Unknown"))
 }
 
 #[cfg(target_os = "linux")]
-pub async fn get_motherboard() -> String {
+pub(crate) async fn get_motherboard() -> String {
     use std::fs;
     fs::read_to_string("/sys/class/dmi/id/board_name")
         .unwrap_or(String::from("Unknown"))
@@ -57,7 +57,7 @@ pub async fn get_motherboard() -> String {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn get_motherboard() -> String {
+pub(crate) async fn get_motherboard() -> String {
     use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 
     let local_machine_key: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
@@ -74,12 +74,12 @@ pub async fn get_motherboard() -> String {
     }
 }
 
-pub async fn get_kernel() -> String {
+pub(crate) async fn get_kernel() -> String {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.kernel_version().unwrap_or(String::from("Unknown"))
 }
 
-pub async fn get_gpus() -> Vec<String> {
+pub(crate) async fn get_gpus() -> Vec<String> {
 
     let instance: gfx_backend_vulkan::Instance =
         Instance::create("hayabusa", 1).unwrap();
@@ -94,17 +94,17 @@ pub async fn get_gpus() -> Vec<String> {
     names
 }
 
-pub async fn get_total_memory() -> u64 {
+pub(crate) async fn get_total_memory() -> u64 {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.total_memory()
 }
 
-pub async fn get_used_memory() -> u64 {
+pub(crate) async fn get_used_memory() -> u64 {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     sys.used_memory()
 }
 
-pub async fn get_disks() -> Vec<Disk> {
+pub(crate) async fn get_disks() -> Vec<Disk> {
     let sys: MutexGuard<System> = SYS.lock().unwrap();
     let sys_disks: &[sysinfo::Disk] = sys.disks();
     let mut disks: Vec<Disk> = Vec::new();
@@ -122,12 +122,12 @@ pub async fn get_disks() -> Vec<Disk> {
     disks
 }
 
-pub async fn get_local_ip_address() -> String {
+pub(crate) async fn get_local_ip_address() -> String {
     let local_ip: IpAddr = local_ip().unwrap();
     local_ip.to_string()
 }
 
-pub async fn get_public_ip_address() -> String {
+pub(crate) async fn get_public_ip_address() -> String {
     let client: Client = Client::builder().timeout(Duration::from_secs(5))
         .build()
         .unwrap();
