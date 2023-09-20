@@ -20,7 +20,8 @@ pub(crate) fn main() {
             std::process::exit(1);
         });
     let mut buffer: Vec<u8> = vec![0u8; 65536];
-    client.read(&mut buffer).expect("Failed to read from socket");
+    let bytes_read: usize = client.read(&mut buffer).expect("Failed to read from socket");
+    buffer.truncate(bytes_read);
     let string: Cow<str> = String::from_utf8_lossy(&buffer);
     println!("{}", string);
 }
