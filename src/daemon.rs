@@ -1,8 +1,10 @@
+use std::io::{Write};
 use std::sync::MutexGuard;
+use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use sysinfo::{System, SystemExt};
 use tokio::task;
 use tokio::task::JoinHandle;
-use crate::fetch_info;
+use crate::{fetch_info, SOCKET_PATH};
 use crate::fetch_info::{Disk, Memory, SYS, SystemInfo};
 
 pub(crate) async fn main() {
@@ -78,5 +80,22 @@ pub(crate) async fn main() {
         + &*local_ip + "\n"
         + &*public_ip;
 
-    println!("{}", final_fetch);
+    let socket_path: String;
+    {
+        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock().unwrap();
+        socket_path = socket_path_mutex.clone();
+    }
+
+    #[cfg(target_os = "linux")]
+    if std::path::Path::new(&socket_path).exists() {
+        std::fs::remove_file(&socket_path).expect("Failed to remove socket");
+    }
+
+    let listener: LocalSocketListener = LocalSocketListener::bind(socket_path.clone()).unwrap();
+    println!("Listening on {}", socket_path.clone());
+    for stream in listener.incoming() {
+        let mut client: LocalSocketStream = stream.expect("Failed to connect to client");
+        client.write_all(final_fetch.as_bytes()).expect("Failed to send message!");
+        println!("Sent fetch!");
+    }
 }
