@@ -21,10 +21,15 @@ fn write_default_lua() {
     fs::write(lua_file_location, LUA_SCRIPT).expect("Failed to write default config.lua");
 }
 
+#[cfg(target_os = "linux")]
 pub(crate) fn get_config_location() -> String {
     let config_dir: String = env::var("XDG_CONFIG_HOME")
         .unwrap_or_else(|_| env::var("HOME").expect("Failed to get $HOME") + "/.config");
-    let hayabusa_dir: String = config_dir + "/hayabusa/";
-    let lua_file: String = hayabusa_dir + "config.lua";
-    lua_file
+    format!("{}/hayabusa/config.lua", config_dir)
+}
+
+#[cfg(target_os = "windows")]
+pub(crate) fn get_config_location() -> String {
+    let config_dir: String = env::var("APPDATA").expect("Failed to get %APPDATA%");
+    format!("{}\\hayabusa\\config.lua", config_dir)
 }
