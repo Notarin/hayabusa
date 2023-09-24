@@ -81,6 +81,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     system_info
 }
 
+//noinspection SpellCheckingInspection
 pub(crate) fn compile_fetch(lua_file: String) -> String {
     let system_info: SystemInfo = SYSTEM_INFO_MUTEX.lock()
         .expect("Failed to lock system info mutex")
@@ -126,18 +127,18 @@ pub(crate) fn compile_fetch(lua_file: String) -> String {
         globals.set("cpu", &*system_info.cpu).unwrap();
         globals.set("motherboard", &*system_info.motherboard).unwrap();
         globals.set("kernel", &*system_info.kernel).unwrap();
-        let gpus_table: rlua::Table = lua_ctx.create_table().unwrap();
+        let gpus_table: Table = lua_ctx.create_table().unwrap();
         for (index, gpu) in system_info.gpus.iter().enumerate() {
             gpus_table.set(index + 1, gpu.clone()).unwrap();
         }
         globals.set("gpus", gpus_table).unwrap();
-        let memory_table: rlua::Table = lua_ctx.create_table().unwrap();
+        let memory_table: Table = lua_ctx.create_table().unwrap();
         memory_table.set("used", system_info.memory.used).unwrap();
         memory_table.set("total", system_info.memory.total).unwrap();
         globals.set("memory", memory_table).unwrap();
-        let disks_table: rlua::Table = lua_ctx.create_table().unwrap();
+        let disks_table: Table = lua_ctx.create_table().unwrap();
         for (index, disk) in system_info.disks.iter().enumerate() {
-            let disk_table: rlua::Table = lua_ctx.create_table().unwrap();
+            let disk_table: Table = lua_ctx.create_table().unwrap();
             disk_table.set("name", disk.name.clone()).unwrap();
             disk_table.set("used", disk.used).unwrap();
             disk_table.set("total", disk.total).unwrap();

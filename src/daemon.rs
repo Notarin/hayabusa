@@ -64,7 +64,7 @@ async fn initialize_system_info() {
         // Here is where we initialize the system info struct we've defined ourselves
         let mut system_info_mutex_guard: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
             .expect("Failed to lock system info mutex");
-        *system_info_mutex_guard = Option::from(Some(system_info)
-            .expect("Failed to initialize system info"));
+        *system_info_mutex_guard = Option::from(Some(system_info))
+            .expect("Failed to initialize system info");
     }
 }
