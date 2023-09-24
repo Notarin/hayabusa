@@ -2,7 +2,6 @@ use std::sync::{Mutex, MutexGuard};
 use reqwest::Client;
 use std::time::Duration;
 use sysinfo::{CpuExt, DiskExt, System, SystemExt};
-use std::net::IpAddr;
 use local_ip_address::local_ip;
 use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan::Backend;
@@ -346,17 +345,19 @@ pub(crate) async fn get_disks() -> Vec<Disk> {
 }
 
 pub(crate) async fn get_local_ip_address() -> String {
-    let local_ip: IpAddr = local_ip().expect("Failed to get local IP address");
-    let string: String = local_ip.to_string();
+    let local_ip: String = match local_ip() {
+        Ok(ip) => ip.to_string(),
+        Err(_) => "Unknown".to_string(),
+    };
     {
         let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
-            system_info.local_ip = string.clone();
+            system_info.local_ip = local_ip.clone();
         }
     }
-    string
+    local_ip
 }
 
 pub(crate) async fn get_public_ip_address() -> String {
