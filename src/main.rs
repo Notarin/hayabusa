@@ -2,6 +2,7 @@
 mod daemon;
 mod fetch_info;
 mod fetch;
+mod config;
 
 use std::sync::Mutex;
 use clap::Parser;

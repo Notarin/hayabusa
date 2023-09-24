@@ -1,8 +1,9 @@
 use std::borrow::Cow;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::sync::MutexGuard;
 use interprocess::local_socket::LocalSocketStream;
 use crate::SOCKET_PATH;
+use crate::config::load_lua_config;
 
 pub(crate) fn main() {
     let socket_path: String;
@@ -19,6 +20,8 @@ pub(crate) fn main() {
             );
             std::process::exit(1);
         });
+    let lua_config: String = load_lua_config();
+    client.write_all(lua_config.as_bytes()).expect("Failed to send lua!");
     let mut buffer: Vec<u8> = vec![0u8; 65536];
     let bytes_read: usize = client.read(&mut buffer).expect("Failed to read from socket");
     buffer.truncate(bytes_read);

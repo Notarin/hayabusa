@@ -1,10 +1,10 @@
-use std::io::Write;
+use std::io::{Read, Write};
 use std::sync::{Mutex, MutexGuard};
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use lazy_static::lazy_static;
 use sysinfo::{System, SystemExt};
 use crate::{fetch_info, SOCKET_PATH};
-use crate::fetch_info::{loop_update_system_info, SYS, SystemInfo};
+use crate::fetch_info::{compile_fetch, loop_update_system_info, SYS, SystemInfo};
 
 lazy_static!(
     pub(crate) static ref SYSTEM_INFO_MUTEX: Mutex<Option<SystemInfo>> = Mutex::new(None);
@@ -36,8 +36,13 @@ pub(crate) async fn main() {
     // Here is the infinite loop that listens for connections from the fetch client
     for stream in listener.incoming() {
         let mut client: LocalSocketStream = stream.expect("Failed to connect to client");
+        let mut received: Vec<u8> = vec![0u8; 65536];
+        let bytes_read: usize = client.read(&mut received).expect("Failed to read from socket");
+        received.truncate(bytes_read);
+        let lua: String = String::from_utf8_lossy(&received).to_string();
+        let fetch: String = compile_fetch(lua);
         client.write_all(
-            fetch_info::compile_fetch().as_bytes()
+            fetch.as_bytes()
         ).expect("Failed to send message!");
         println!("Sent fetch!");
     }

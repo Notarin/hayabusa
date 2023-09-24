@@ -8,6 +8,7 @@ use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan::Backend;
 use gfx_hal::Instance;
 use lazy_static::lazy_static;
+use rlua::{Lua, Table};
 use tokio::task::JoinHandle;
 use crate::daemon::SYSTEM_INFO_MUTEX;
 
@@ -81,39 +82,79 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     system_info
 }
 
-pub(crate) fn compile_fetch() -> String {
+pub(crate) fn compile_fetch(lua_file: String) -> String {
     let system_info: SystemInfo = SYSTEM_INFO_MUTEX.lock()
         .expect("Failed to lock system info mutex")
         .clone().expect("System info has not been initialized");
-    let distro: String = "Distro: ".to_owned() + &*system_info.distro;
-    let cpu: String = "CPU: ".to_owned() + &*system_info.cpu;
-    let motherboard: String = "Motherboard: ".to_owned() + &*system_info.motherboard;
-    let kernel: String = "Kernel: ".to_owned() + &*system_info.kernel;
-    let gpus: String = "GPU: ".to_owned() + &*system_info.gpus.join("\n");
-    let total_memory_parsed: f64 = system_info.memory.total as f64 / 1024.0 / 1024.0 / 1024.0;
-    let used_memory_parsed: f64 = system_info.memory.used as f64 / 1024.0 / 1024.0 / 1024.0;
-    let memory: String = "".to_owned()
-        + "Memory: "
-        + &*format!("{:.2} GiB/{:.2} GiB", used_memory_parsed, total_memory_parsed);
-    let disks: String = system_info.disks.iter().cloned().map(|disk| {
-        let used_parsed: f64 = disk.used as f64 / 1024.0 / 1024.0 / 1024.0;
-        let total_parsed: f64 = disk.total as f64 / 1024.0 / 1024.0 / 1024.0;
-        format!("Disk: {}: {:.2} GiB/{:.2} GiB", disk.name, used_parsed, total_parsed)
-    }).collect::<Vec<String>>().join("\n");
-    let local_ip: String = "Local IP: ".to_owned() + &*system_info.local_ip;
-    let public_ip: String = "Public IP: ".to_owned() + &*system_info.public_ip;
 
+    let lua = Lua::new();
+    let mut final_fetch: String = "".to_string();
 
-    let final_fetch: String = "".to_owned()
-        + &*distro + "\n"
-        + &*cpu + "\n"
-        + &*motherboard + "\n"
-        + &*kernel + "\n"
-        + &*gpus + "\n"
-        + &*memory + "\n"
-        + &*disks + "\n"
-        + &*local_ip + "\n"
-        + &*public_ip;
+    lua.context(|lua_ctx| {
+        let globals: Table = lua_ctx.globals();
+
+        {
+            // UNSAFE GLOBALS, DANGER!!! the daemon is intended to be run as a system service
+            // which mean root is running this lua, this means that using these globals
+            // the user could effectively gain root access.
+            // To prevent this we disable the following globals:
+            globals.set("os", rlua::Value::Nil).expect("Failed to set os to nil");
+            globals.set("io", rlua::Value::Nil).expect("Failed to set io to nil");
+            globals.set("debug", rlua::Value::Nil).expect("Failed to set debug to nil");
+            globals.set("package", rlua::Value::Nil).expect("Failed to set package to nil");
+            globals.set("loadfile", rlua::Value::Nil).expect("Failed to set loadfile to nil");
+            globals.set("dofile", rlua::Value::Nil).expect("Failed to set dofile to nil");
+            globals.set("load", rlua::Value::Nil).expect("Failed to set load to nil");
+            globals.set("assert", rlua::Value::Nil).expect("Failed to set assert to nil");
+            globals.set("collectgarbage", rlua::Value::Nil).expect("Failed to set collectgarbage to nil");
+            globals.set("getmetatable", rlua::Value::Nil).expect("Failed to set getmetatable to nil");
+            globals.set("setmetatable", rlua::Value::Nil).expect("Failed to set setmetatable to nil");
+            globals.set("rawequal", rlua::Value::Nil).expect("Failed to set rawequal to nil");
+            globals.set("rawget", rlua::Value::Nil).expect("Failed to set rawget to nil");
+            globals.set("rawset", rlua::Value::Nil).expect("Failed to set rawset to nil");
+            globals.set("require", rlua::Value::Nil).expect("Failed to set require to nil");
+            globals.set("module", rlua::Value::Nil).expect("Failed to set module to nil");
+            globals.set("package", rlua::Value::Nil).expect("Failed to set package to nil");
+            globals.set("loadlib", rlua::Value::Nil).expect("Failed to set loadlib to nil");
+            globals.set("print", rlua::Value::Nil).expect("Failed to set print to nil");
+            // We also disable the following metamethods:
+            globals.set("__index", rlua::Value::Nil).expect("Failed to set __index to nil");
+            globals.set("__newindex", rlua::Value::Nil).expect("Failed to set __newindex to nil");
+            globals.set("__metatable", rlua::Value::Nil).expect("Failed to set __metatable to nil");
+        }
+
+        globals.set("distro", system_info.distro).unwrap();
+        globals.set("cpu", &*system_info.cpu).unwrap();
+        globals.set("motherboard", &*system_info.motherboard).unwrap();
+        globals.set("kernel", &*system_info.kernel).unwrap();
+        let gpus_table: rlua::Table = lua_ctx.create_table().unwrap();
+        for (index, gpu) in system_info.gpus.iter().enumerate() {
+            gpus_table.set(index + 1, gpu.clone()).unwrap();
+        }
+        globals.set("gpus", gpus_table).unwrap();
+        let memory_table: rlua::Table = lua_ctx.create_table().unwrap();
+        memory_table.set("used", system_info.memory.used).unwrap();
+        memory_table.set("total", system_info.memory.total).unwrap();
+        globals.set("memory", memory_table).unwrap();
+        let disks_table: rlua::Table = lua_ctx.create_table().unwrap();
+        for (index, disk) in system_info.disks.iter().enumerate() {
+            let disk_table: rlua::Table = lua_ctx.create_table().unwrap();
+            disk_table.set("name", disk.name.clone()).unwrap();
+            disk_table.set("used", disk.used).unwrap();
+            disk_table.set("total", disk.total).unwrap();
+            disks_table.set(index + 1, disk_table).unwrap();
+        }
+        globals.set("disks", disks_table).unwrap();
+        globals.set("local_ip", &*system_info.local_ip).unwrap();
+        globals.set("public_ip", &*system_info.public_ip).unwrap();
+
+        let result: String = match lua_ctx.load(&lua_file).exec() {
+            Ok(_) => globals.get("result").unwrap(),
+            Err(e) => "Failed to execute lua script: ".to_string() + &e.to_string(),
+        };
+        final_fetch = result;
+    });
+
     final_fetch
 }
 
