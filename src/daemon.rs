@@ -11,15 +11,9 @@ lazy_static!(
 );
 
 pub(crate) async fn main() {
-
     initialize_system_info().await;
 
-    let socket_path: String;
-    {
-        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock()
-            .expect("Failed to lock socket path mutex");
-        socket_path = socket_path_mutex.clone();
-    }
+    let socket_path: String = SOCKET_PATH.clone();
 
     #[cfg(target_os = "linux")]
     if std::path::Path::new(&socket_path).exists() {

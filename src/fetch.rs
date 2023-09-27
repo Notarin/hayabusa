@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::io::Read;
-use std::sync::MutexGuard;
 use interprocess::local_socket::LocalSocketStream;
 use rlua::{Lua, Table};
 use crate::SOCKET_PATH;
@@ -8,12 +7,7 @@ use crate::config::load_lua_config;
 use crate::fetch_info::SystemInfo;
 
 pub(crate) fn main() {
-    let socket_path: String;
-    {
-        let socket_path_mutex: MutexGuard<String> = SOCKET_PATH.lock()
-            .expect("Failed to lock socket path mutex");
-        socket_path = socket_path_mutex.clone();
-    }
+    let socket_path: String = SOCKET_PATH.clone();
     let mut client: LocalSocketStream = LocalSocketStream::connect(socket_path.clone())
         .unwrap_or_else(|_| {
             eprintln!(

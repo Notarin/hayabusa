@@ -4,7 +4,6 @@ mod fetch_info;
 mod fetch;
 mod config;
 
-use std::sync::Mutex;
 use clap::Parser;
 use lazy_static::lazy_static;
 
@@ -18,12 +17,12 @@ struct Args {
 
 #[cfg(target_os = "linux")]
 lazy_static!(
-    static ref SOCKET_PATH: Mutex<String> = Mutex::new("/tmp/hayabusa".to_string());
+    static ref SOCKET_PATH: String = "/tmp/hayabusa".to_string();
 );
 
 #[cfg(target_os = "windows")]
 lazy_static!(
-    static ref SOCKET_PATH: Mutex<String> = Mutex::new("hayabusa".to_string());
+    static ref SOCKET_PATH: String = "hayabusa".to_string();
 );
 
 #[tokio::main]
