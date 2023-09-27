@@ -7,15 +7,15 @@ use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan::Backend;
 use gfx_hal::Instance;
 use lazy_static::lazy_static;
-use rlua::{Lua, Table};
 use tokio::task::JoinHandle;
+use serde::{Deserialize, Serialize};
 use crate::daemon::SYSTEM_INFO_MUTEX;
 
 lazy_static! {
     pub(crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct SystemInfo {
     pub(crate) cpu: String,
     pub(crate) distro: String,
@@ -28,14 +28,14 @@ pub(crate) struct SystemInfo {
     pub(crate) public_ip: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct Disk {
     pub(crate) name: String,
     pub(crate) used: u64,
     pub(crate) total: u64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct Memory {
     pub(crate) used: u64,
     pub(crate) total: u64,
@@ -81,81 +81,13 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     system_info
 }
 
-//noinspection SpellCheckingInspection
-pub(crate) fn compile_fetch(lua_file: String) -> String {
+pub(crate) fn serialize_fetch() -> String {
     let system_info: SystemInfo = SYSTEM_INFO_MUTEX.lock()
         .expect("Failed to lock system info mutex")
         .clone().expect("System info has not been initialized");
-
-    let lua = Lua::new();
-    let mut final_fetch: String = "".to_string();
-
-    lua.context(|lua_ctx| {
-        let globals: Table = lua_ctx.globals();
-
-        {
-            // UNSAFE GLOBALS, DANGER!!! the daemon is intended to be run as a system service
-            // which mean root is running this lua, this means that using these globals
-            // the user could effectively gain root access.
-            // To prevent this we disable the following globals:
-            globals.set("os", rlua::Value::Nil).expect("Failed to set os to nil");
-            globals.set("io", rlua::Value::Nil).expect("Failed to set io to nil");
-            globals.set("debug", rlua::Value::Nil).expect("Failed to set debug to nil");
-            globals.set("package", rlua::Value::Nil).expect("Failed to set package to nil");
-            globals.set("loadfile", rlua::Value::Nil).expect("Failed to set loadfile to nil");
-            globals.set("dofile", rlua::Value::Nil).expect("Failed to set dofile to nil");
-            globals.set("load", rlua::Value::Nil).expect("Failed to set load to nil");
-            globals.set("assert", rlua::Value::Nil).expect("Failed to set assert to nil");
-            globals.set("collectgarbage", rlua::Value::Nil).expect("Failed to set collectgarbage to nil");
-            globals.set("getmetatable", rlua::Value::Nil).expect("Failed to set getmetatable to nil");
-            globals.set("setmetatable", rlua::Value::Nil).expect("Failed to set setmetatable to nil");
-            globals.set("rawequal", rlua::Value::Nil).expect("Failed to set rawequal to nil");
-            globals.set("rawget", rlua::Value::Nil).expect("Failed to set rawget to nil");
-            globals.set("rawset", rlua::Value::Nil).expect("Failed to set rawset to nil");
-            globals.set("require", rlua::Value::Nil).expect("Failed to set require to nil");
-            globals.set("module", rlua::Value::Nil).expect("Failed to set module to nil");
-            globals.set("package", rlua::Value::Nil).expect("Failed to set package to nil");
-            globals.set("loadlib", rlua::Value::Nil).expect("Failed to set loadlib to nil");
-            globals.set("print", rlua::Value::Nil).expect("Failed to set print to nil");
-            // We also disable the following metamethods:
-            globals.set("__index", rlua::Value::Nil).expect("Failed to set __index to nil");
-            globals.set("__newindex", rlua::Value::Nil).expect("Failed to set __newindex to nil");
-            globals.set("__metatable", rlua::Value::Nil).expect("Failed to set __metatable to nil");
-        }
-
-        globals.set("distro", system_info.distro).unwrap();
-        globals.set("cpu", &*system_info.cpu).unwrap();
-        globals.set("motherboard", &*system_info.motherboard).unwrap();
-        globals.set("kernel", &*system_info.kernel).unwrap();
-        let gpus_table: Table = lua_ctx.create_table().unwrap();
-        for (index, gpu) in system_info.gpus.iter().enumerate() {
-            gpus_table.set(index + 1, gpu.clone()).unwrap();
-        }
-        globals.set("gpus", gpus_table).unwrap();
-        let memory_table: Table = lua_ctx.create_table().unwrap();
-        memory_table.set("used", system_info.memory.used).unwrap();
-        memory_table.set("total", system_info.memory.total).unwrap();
-        globals.set("memory", memory_table).unwrap();
-        let disks_table: Table = lua_ctx.create_table().unwrap();
-        for (index, disk) in system_info.disks.iter().enumerate() {
-            let disk_table: Table = lua_ctx.create_table().unwrap();
-            disk_table.set("name", disk.name.clone()).unwrap();
-            disk_table.set("used", disk.used).unwrap();
-            disk_table.set("total", disk.total).unwrap();
-            disks_table.set(index + 1, disk_table).unwrap();
-        }
-        globals.set("disks", disks_table).unwrap();
-        globals.set("local_ip", &*system_info.local_ip).unwrap();
-        globals.set("public_ip", &*system_info.public_ip).unwrap();
-
-        let result: String = match lua_ctx.load(&lua_file).exec() {
-            Ok(_) => globals.get("result").unwrap(),
-            Err(e) => "Failed to execute lua script: ".to_string() + &e.to_string(),
-        };
-        final_fetch = result;
-    });
-
-    final_fetch
+    let serialized: String = serde_yaml::to_string(&system_info)
+        .expect("Failed to serialize system info");
+    serialized
 }
 
 pub(crate) async fn loop_update_system_info() {
