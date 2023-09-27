@@ -40,37 +40,6 @@ fn execute_lua(system_info: SystemInfo) -> String {
 
     lua.context(|lua_ctx| {
         let globals: Table = lua_ctx.globals();
-
-        {
-            // UNSAFE GLOBALS, DANGER!!! the daemon is intended to be run as a system service
-            // which mean root is running this lua, this means that using these globals
-            // the user could effectively gain root access.
-            // To prevent this we disable the following globals:
-            globals.set("os", rlua::Value::Nil).expect("Failed to set os to nil");
-            globals.set("io", rlua::Value::Nil).expect("Failed to set io to nil");
-            globals.set("debug", rlua::Value::Nil).expect("Failed to set debug to nil");
-            globals.set("package", rlua::Value::Nil).expect("Failed to set package to nil");
-            globals.set("loadfile", rlua::Value::Nil).expect("Failed to set loadfile to nil");
-            globals.set("dofile", rlua::Value::Nil).expect("Failed to set dofile to nil");
-            globals.set("load", rlua::Value::Nil).expect("Failed to set load to nil");
-            globals.set("assert", rlua::Value::Nil).expect("Failed to set assert to nil");
-            globals.set("collectgarbage", rlua::Value::Nil).expect("Failed to set collectgarbage to nil");
-            globals.set("getmetatable", rlua::Value::Nil).expect("Failed to set getmetatable to nil");
-            globals.set("setmetatable", rlua::Value::Nil).expect("Failed to set setmetatable to nil");
-            globals.set("rawequal", rlua::Value::Nil).expect("Failed to set rawequal to nil");
-            globals.set("rawget", rlua::Value::Nil).expect("Failed to set rawget to nil");
-            globals.set("rawset", rlua::Value::Nil).expect("Failed to set rawset to nil");
-            globals.set("require", rlua::Value::Nil).expect("Failed to set require to nil");
-            globals.set("module", rlua::Value::Nil).expect("Failed to set module to nil");
-            globals.set("package", rlua::Value::Nil).expect("Failed to set package to nil");
-            globals.set("loadlib", rlua::Value::Nil).expect("Failed to set loadlib to nil");
-            globals.set("print", rlua::Value::Nil).expect("Failed to set print to nil");
-            // We also disable the following metamethods:
-            globals.set("__index", rlua::Value::Nil).expect("Failed to set __index to nil");
-            globals.set("__newindex", rlua::Value::Nil).expect("Failed to set __newindex to nil");
-            globals.set("__metatable", rlua::Value::Nil).expect("Failed to set __metatable to nil");
-        }
-
         globals.set("distro", system_info.distro).unwrap();
         globals.set("cpu", &*system_info.cpu).unwrap();
         globals.set("motherboard", &*system_info.motherboard).unwrap();
