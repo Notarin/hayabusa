@@ -3,6 +3,7 @@ use std::io::Read;
 use interprocess::local_socket::LocalSocketStream;
 use rlua::{Lua, Table};
 use regex::Regex;
+use unicode_width::UnicodeWidthStr;
 use crate::{ascii_art, SOCKET_PATH};
 use crate::config::load_lua_config;
 use crate::fetch_info::SystemInfo;
@@ -81,7 +82,11 @@ fn get_ascii_art(distro: String) -> String {
 fn put_ascii_left(ascii_art: String, fetch: String) -> String {
     let parsed_art: String = parse_ascii_art(ascii_art.clone());
     let ansi_free_art: String = remove_ansi(ascii_art.clone());
-    let width: usize = ansi_free_art.lines().map(str::len).max().unwrap_or(0);
+    let width: usize = ansi_free_art
+        .lines()
+        .map(|line| UnicodeWidthStr::width(line))
+        .max()
+        .unwrap_or(0);    println!("width: {}", width);
     let height: usize = ansi_free_art.lines().count();
     let fetch_height = fetch.lines().count();
 
@@ -138,7 +143,7 @@ fn parse_ascii_art(ascii_art: String) -> String {
 }
 
 fn remove_ansi(ascii_art: String) -> String {
-    let regex: Regex = Regex::new(r"(\{\{.*}})").unwrap();
+    let regex: Regex = Regex::new(r"(\{\{.*?}})").unwrap();
     let result: String = regex.replace_all(&ascii_art, "").to_string();
     result
 }

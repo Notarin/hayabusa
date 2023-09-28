@@ -643,6 +643,7 @@ dependencies = [
  "serde_yaml",
  "sysinfo",
  "tokio",
+ "unicode-width",
  "winreg 0.51.0",
 ]
 
@@ -1721,6 +1722,12 @@ checksum = "5c5713f0fc4b5db668a2ac63cdb7bb4469d8c9fed047b1d0292cc7b0ce2ba921"
 dependencies = [
  "tinyvec",
 ]
+
+[[package]]
+name = "unicode-width"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e51733f11c9c4f72aa0c160008246859e340b00807569a0da0e7a1079b27ba85"
 
 [[package]]
 name = "unsafe-libyaml"
