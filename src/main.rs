@@ -3,6 +3,7 @@ mod daemon;
 mod fetch_info;
 mod fetch;
 mod config;
+mod ascii_art;
 
 use clap::Parser;
 use lazy_static::lazy_static;
