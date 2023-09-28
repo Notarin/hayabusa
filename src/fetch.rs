@@ -75,6 +75,7 @@ fn execute_lua(system_info: SystemInfo) -> String {
 fn get_ascii_art(distro: String) -> String {
     match distro.as_str() {
         "Arch Linux" => ascii_art::ALL_ART.arch.big,
+        "Windows" => ascii_art::ALL_ART.windows.big,
         _ => "none",
     }.to_string()
 }
