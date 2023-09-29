@@ -4,6 +4,7 @@ mod fetch_info;
 mod fetch;
 mod config;
 mod ascii_art;
+mod toml;
 
 use clap::Parser;
 use lazy_static::lazy_static;

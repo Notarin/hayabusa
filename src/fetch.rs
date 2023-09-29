@@ -5,8 +5,9 @@ use rlua::{Lua, Table};
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::{ascii_art, SOCKET_PATH};
-use crate::config::load_lua_config;
+use crate::config::{load_lua_config, load_toml_config};
 use crate::fetch_info::SystemInfo;
+use crate::toml::TomlConfig;
 
 pub(crate) fn main() {
     let socket_path: String = SOCKET_PATH.clone();
@@ -81,6 +82,7 @@ fn get_ascii_art(distro: String) -> String {
 }
 
 fn put_ascii_left(ascii_art: String, fetch: String) -> String {
+    let toml_config: TomlConfig = load_toml_config();
     let parsed_art: String = parse_ascii_art(ascii_art.clone());
     let ansi_free_art: String = remove_ansi(ascii_art.clone());
     let width: usize = ansi_free_art
@@ -89,9 +91,16 @@ fn put_ascii_left(ascii_art: String, fetch: String) -> String {
         .max()
         .unwrap_or(0);
     let height: usize = ansi_free_art.lines().count();
-    let fetch_height = fetch.lines().count();
+    let fetch_height: usize = fetch.lines().count();
+    let fetch_width: usize = fetch
+        .lines()
+        .map(UnicodeWidthStr::width)
+        .max()
+        .unwrap_or(0);
+    let applied_width: u8 = (width) as u8 + toml_config.spacing.middle_margin;
 
-    let full_height = std::cmp::max(height, fetch_height);
+    let full_height: usize = std::cmp::max(height, fetch_height);
+    let full_width: u8 = (width) as u8 + toml_config.spacing.middle_margin + (fetch_width) as u8;
 
     let mut result: String = "".to_string();
     // Start with ascii art
@@ -101,15 +110,17 @@ fn put_ascii_left(ascii_art: String, fetch: String) -> String {
     // Move cursor up to the top of the ascii art
     result.push_str(&format!("\x1b[{}A", height-1));
     // Prepend fetch with a move right to the width of the ascii art
-    let mut fetch_modified: String = format!("\x1b[{}C", width) + &fetch;
+    let mut fetch_modified: String = format!("\x1b[{}C", applied_width) + &fetch;
     // Set up the fetch to print with whitespace on the left based on the width of the ascii art
-    fetch_modified = fetch_modified.replace('\n', &format!("\n\x1b[{}C", width));
+    fetch_modified = fetch_modified.replace('\n', &format!("\n\x1b[{}C", applied_width));
     // Add the fetch to the result
     result.push_str(&fetch_modified);
-    // Move cursor down to the bottom of the fetch
-    result.push_str(&format!("\x1b[{}B", full_height));
-    // Move cursor to the left edge of the terminal
-    result.push_str("\x1b[0D");
+    // Move cursor left my full width (move to the left of the terminal)
+    result.push_str(&format!("\x1b[{}D", full_width));
+    // Figure remaining height
+    let remaining_height: usize = full_height - fetch_height;
+    // Move cursor down by remaining height
+    result.push_str(&format!("\x1b[{}B", remaining_height));
 
     result
 }
