@@ -85,7 +85,7 @@ fn put_ascii_left(ascii_art: String, fetch: String) -> String {
     let ansi_free_art: String = remove_ansi(ascii_art.clone());
     let width: usize = ansi_free_art
         .lines()
-        .map(|line| UnicodeWidthStr::width(line))
+        .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
     let height: usize = ansi_free_art.lines().count();
