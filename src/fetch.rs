@@ -85,43 +85,71 @@ fn put_ascii_left(ascii_art: String, fetch: String) -> String {
     let toml_config: TomlConfig = load_toml_config();
     let parsed_art: String = parse_ascii_art(ascii_art.clone());
     let ansi_free_art: String = remove_ansi(ascii_art.clone());
-    let width: usize = ansi_free_art
+    let art_width: usize = ansi_free_art
         .lines()
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
-    let height: usize = ansi_free_art.lines().count();
+    let art_height: usize = ansi_free_art.lines().count();
     let fetch_height: usize = fetch.lines().count();
     let fetch_width: usize = fetch
         .lines()
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
-    let applied_width: u8 = (width) as u8 + toml_config.spacing.middle_margin;
 
-    let full_height: usize = std::cmp::max(height, fetch_height);
-    let full_width: u8 = (width) as u8 + toml_config.spacing.middle_margin + (fetch_width) as u8;
+    // Get the width of the fetch and the art without ansi escape codes
+    // used for later when equalizing the width of the lines
+    let ansi_free_art_lines: Vec<String> = ansi_free_art.lines().map(|s| s.to_string()).collect();
+    let ansi_free_fetch_lines: Vec<String> = fetch.lines().map(|s| s.to_string()).collect();
 
-    let mut result: String = "".to_string();
-    // Start with ascii art
-    result.push_str(&parsed_art);
-    // Move cursor to the left based on the width of the ascii art
-    result.push_str(&format!("\x1b[{}D", width));
-    // Move cursor up to the top of the ascii art
-    result.push_str(&format!("\x1b[{}A", height-1));
-    // Prepend fetch with a move right to the width of the ascii art
-    let mut fetch_modified: String = format!("\x1b[{}C", applied_width) + &fetch;
-    // Set up the fetch to print with whitespace on the left based on the width of the ascii art
-    fetch_modified = fetch_modified.replace('\n', &format!("\n\x1b[{}C", applied_width));
-    // Add the fetch to the result
-    result.push_str(&fetch_modified);
-    // Move cursor left my full width (move to the left of the terminal)
-    result.push_str(&format!("\x1b[{}D", full_width));
-    // Figure remaining height
-    let remaining_height: usize = full_height - fetch_height;
-    // Move cursor down by remaining height
-    result.push_str(&format!("\x1b[{}B", remaining_height));
+    // Preparing the result vector and converting the art and fetch to vectors
+    let mut result: Vec<String> = "".to_string().lines().map(|s| s.to_string()).collect();
+    let mut art_lines: Vec<String> = parsed_art.lines().map(|s| s.to_string()).collect();
+    let mut fetch_lines: Vec<String> = fetch.lines().map(|s| s.to_string()).collect();
+    // we need the art to be equal to the fetch in height
+    if art_height < fetch_height {
+        let difference: usize = fetch_height - art_height;
+        for _ in 0..difference {
+            art_lines.push(" ".repeat(art_width));
+        }
+    }
+    if art_height > fetch_height {
+        let difference: usize = art_height - fetch_height;
+        for _ in 0..difference {
+            fetch_lines.push(" ".repeat(fetch_width));
+        }
+    }
 
+    let pad_line_to_width: fn(&mut String, &String, usize) = |
+        line: &mut String,
+        ansi_free_line: &String,
+        target_width: usize
+    | {
+        let current_width: usize = UnicodeWidthStr::width(ansi_free_line.as_str());
+        if current_width < target_width {
+            let difference: usize = target_width - current_width;
+            line.push_str(" ".repeat(difference).as_str());
+        }
+    };
+
+    for (line, ansi_free_line) in art_lines.iter_mut().zip(ansi_free_art_lines.iter()) {
+        pad_line_to_width(line, ansi_free_line, art_width);
+    }
+
+    for (line, ansi_free_line) in fetch_lines.iter_mut().zip(ansi_free_fetch_lines.iter()) {
+        pad_line_to_width(line, ansi_free_line, fetch_width);
+    }
+
+    // Joining the lines together like a deck of cards
+    for (index, line) in art_lines.iter().enumerate() {
+        let mut new_line: String = line.to_string();
+        new_line.push_str(" ".repeat(toml_config.spacing.middle_margin as usize).as_str());
+        new_line.push_str(&fetch_lines[index]);
+        result.push(new_line);
+    }
+
+    let result: String = result.join("\n");
     result
 }
 
