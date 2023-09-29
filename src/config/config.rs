@@ -1,7 +1,7 @@
 use std::{env, fs};
 use std::path::Path;
 use serde_yaml::{from_str, to_string};
-use crate::toml::{DEFAULT_TOML_CONFIG, TomlConfig};
+use crate::config::toml::{DEFAULT_TOML_CONFIG, TomlConfig};
 
 const LUA_SCRIPT: &str = include_str!("default.lua");
 

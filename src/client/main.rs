@@ -5,9 +5,9 @@ use rlua::{Lua, Table};
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::{ascii_art, SOCKET_PATH};
-use crate::config::{load_lua_config, load_toml_config};
-use crate::fetch_info::SystemInfo;
-use crate::toml::TomlConfig;
+use crate::config::config::{load_lua_config, load_toml_config};
+use crate::daemon::fetch_info::SystemInfo;
+use crate::config::toml::TomlConfig;
 
 pub(crate) fn main() {
     let socket_path: String = SOCKET_PATH.clone();
@@ -75,8 +75,8 @@ fn execute_lua(system_info: SystemInfo) -> String {
 
 fn get_ascii_art(distro: String) -> String {
     match distro.as_str() {
-        "Arch Linux" => ascii_art::ALL_ART.arch.big,
-        "Windows" => ascii_art::ALL_ART.windows.big,
+        "Arch Linux" => ascii_art::main::ALL_ART.arch.big,
+        "Windows" => ascii_art::main::ALL_ART.windows.big,
         _ => "none",
     }.to_string()
 }

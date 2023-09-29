@@ -9,7 +9,7 @@ use gfx_hal::Instance;
 use lazy_static::lazy_static;
 use tokio::task::JoinHandle;
 use serde::{Deserialize, Serialize};
-use crate::daemon::SYSTEM_INFO_MUTEX;
+use crate::daemon::main::SYSTEM_INFO_MUTEX;
 
 lazy_static! {
     pub(crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());

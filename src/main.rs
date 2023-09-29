@@ -1,13 +1,13 @@
 #![forbid(unsafe_code)]
+
 mod daemon;
-mod fetch_info;
-mod fetch;
-mod config;
 mod ascii_art;
-mod toml;
+mod client;
+mod config;
 
 use clap::Parser;
 use lazy_static::lazy_static;
+use crate::client::main;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -34,9 +34,9 @@ async fn main() {
     //daemon mode is the system service that tracks system info
     if args.daemon {
         println!("Running as daemon");
-        daemon::main().await;
+        daemon::main::main().await;
     } else {
-        fetch::main();
+        main::main();
     }
     if args.benchmark {
         println!("Execution time: {:?}", start.elapsed());

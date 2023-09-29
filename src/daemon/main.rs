@@ -3,8 +3,8 @@ use std::sync::{Mutex, MutexGuard};
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use lazy_static::lazy_static;
 use sysinfo::{System, SystemExt};
-use crate::{fetch_info, SOCKET_PATH};
-use crate::fetch_info::{serialize_fetch, loop_update_system_info, SYS, SystemInfo};
+use crate::{daemon::fetch_info, SOCKET_PATH};
+use crate::daemon::fetch_info::{serialize_fetch, loop_update_system_info, SYS, SystemInfo};
 
 lazy_static!(
     pub(crate) static ref SYSTEM_INFO_MUTEX: Mutex<Option<SystemInfo>> = Mutex::new(None);

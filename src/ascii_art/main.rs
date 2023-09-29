@@ -10,11 +10,11 @@ pub(crate) struct AllArt {
 
 pub(crate) const ALL_ART: AllArt = AllArt {
     arch: Art {
-        big: include_str!("ascii_art/arch/big.ascii"),
-        small: include_str!("ascii_art/arch/small.ascii"),
+        big: include_str!("art_collection/arch/big.ascii"),
+        small: include_str!("art_collection/arch/small.ascii"),
     },
     windows: Art {
-        big: include_str!("ascii_art/windows/big.ascii"),
-        small: include_str!("ascii_art/windows/small.ascii"),
+        big: include_str!("art_collection/windows/big.ascii"),
+        small: include_str!("art_collection/windows/small.ascii"),
     },
 };
