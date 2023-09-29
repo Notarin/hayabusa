@@ -94,11 +94,21 @@ fn put_ascii_left(ascii_art: String, fetch: String) -> String {
     let full_height = std::cmp::max(height, fetch_height);
 
     let mut result: String = "".to_string();
+    // Start with ascii art
     result.push_str(&parsed_art);
+    // Move cursor to the left based on the width of the ascii art
+    result.push_str(&format!("\x1b[{}D", width));
+    // Move cursor up to the top of the ascii art
     result.push_str(&format!("\x1b[{}A", height-1));
-    let fetch_modified = fetch.replace('\n', &format!("\n\x1b[{}C", width));
+    // Prepend fetch with a move right to the width of the ascii art
+    let mut fetch_modified: String = format!("\x1b[{}C", width) + &fetch;
+    // Set up the fetch to print with whitespace on the left based on the width of the ascii art
+    fetch_modified = fetch_modified.replace('\n', &format!("\n\x1b[{}C", width));
+    // Add the fetch to the result
     result.push_str(&fetch_modified);
+    // Move cursor down to the bottom of the fetch
     result.push_str(&format!("\x1b[{}B", full_height));
+    // Move cursor to the left edge of the terminal
     result.push_str("\x1b[0D");
 
     result
