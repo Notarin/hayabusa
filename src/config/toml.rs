@@ -30,6 +30,11 @@ pub(crate) struct Padding {
 #[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct Border {
     pub(crate) enabled: bool,
+    pub(crate) border_chars: BorderChars,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub(crate) struct BorderChars {
     pub(crate) top_left: char,
     pub(crate) top_right: char,
     pub(crate) bottom_left: char,
@@ -56,11 +61,13 @@ pub(crate) const DEFAULT_TOML_CONFIG: TomlConfig = TomlConfig {
     },
     border: Border {
         enabled: false,
-        top_left: '╭',
-        top_right: '╮',
-        bottom_left: '╰',
-        bottom_right: '╯',
-        horizontal: '─',
-        vertical: '│',
+        border_chars: BorderChars {
+            top_left: '╭',
+            top_right: '╮',
+            bottom_left: '╰',
+            bottom_right: '╯',
+            horizontal: '─',
+            vertical: '│',
+        },
     },
 };
