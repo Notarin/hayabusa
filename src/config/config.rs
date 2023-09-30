@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use crate::config::toml::{DEFAULT_TOML_CONFIG, TomlConfig};
 use toml::{from_str, to_string, Value};
+use toml::map::Map;
 
 const LUA_SCRIPT: &str = include_str!("default.lua");
 
@@ -47,20 +48,34 @@ pub(crate) fn load_toml_config() -> TomlConfig {
     let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents).unwrap();
     let default_config: BTreeMap<String, Value> = from_str(&to_string(&DEFAULT_TOML_CONFIG).unwrap()).unwrap();
 
-    let mut is_updated = false;
-    for (key, value) in default_config {
-        if let std::collections::btree_map::Entry::Vacant(e) = loaded_config.entry(key) {
-            e.insert(value);
-            is_updated = true;
-        }
-    }
+    merge_maps(&mut loaded_config, &default_config);
 
-    if is_updated {
-        let new_config_str: String = to_string(&loaded_config).unwrap();
-        fs::write(toml_file_location, new_config_str).expect("Failed to update config.toml");
-    }
+    let new_config_str: String = to_string(&loaded_config).unwrap();
+    fs::write(toml_file_location, new_config_str).expect("Failed to update config.toml");
 
     from_str(&to_string(&loaded_config).unwrap()).unwrap()
+}
+
+fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) {
+    for (key, value) in b.iter() {
+        match a.entry(key.clone()) {
+            std::collections::btree_map::Entry::Vacant(e) => {
+                e.insert(value.clone());
+            },
+            std::collections::btree_map::Entry::Occupied(mut e) => {
+                if let Value::Table(ref mut a_inner) = e.get_mut() {
+                    if let Value::Table(ref b_inner) = value {
+                        let mut a_btree: BTreeMap<String, Value> = a_inner.clone().into_iter().collect();
+                        let b_btree: BTreeMap<String, Value> = b_inner.clone().into_iter().collect();
+                        merge_maps(&mut a_btree, &b_btree);
+                        *a_inner = a_btree.into_iter().collect::<Map<String, Value>>();
+                    }
+                } else {
+                    e.insert(value.clone());
+                }
+            },
+        }
+    }
 }
 
 fn write_default_toml() {
