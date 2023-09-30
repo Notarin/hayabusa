@@ -1,16 +1,127 @@
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::client::main::get_ascii_art;
-use crate::config::toml::{TOML_CONFIG_OBJECT, TomlConfig};
+use crate::config::toml::{BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
 use crate::daemon::fetch_info::SystemInfo;
 
 pub(crate) fn main(system_info: SystemInfo, mut fetch: String) -> String {
+    let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
     let mut ascii_art: String = get_ascii_art(system_info.distro.clone());
     ascii_art = parse_ascii_art(ascii_art);
     ascii_art = normalize(ascii_art);
     fetch = normalize(fetch);
-    let full_fetch: String = add_ascii_art(ascii_art, fetch);
+    let mut full_fetch: String = add_ascii_art(ascii_art, fetch);
+    full_fetch = normalize(full_fetch);
+    // add inner padding
+    full_fetch = add_padding(full_fetch, config.spacing.inner_padding);
+    // add border
+    if config.border.enabled {
+        full_fetch = add_border(full_fetch, &config.border.border_chars);
+    }
+    // add outer padding
+    full_fetch = add_padding(full_fetch, config.spacing.outer_padding);
     reset_formatting_on_cr(full_fetch)
+}
+
+fn debug_line_lengths(string: &str) {
+    // use unicode_width::UnicodeWidthStr;
+    for line in string.lines() {
+        println!("Length: {}", UnicodeWidthStr::width(line));
+    }
+}
+
+fn add_border(string: String, border_chars: &BorderChars) -> String {
+    let lines: Vec<&str> = string.lines().collect();
+    let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes((*s).to_string())).collect();
+    for ansi_free_line in &ansi_free_lines {
+        println!("Width: {}", UnicodeWidthStr::width(ansi_free_line.as_str()));
+    }
+    let max_len: usize = ansi_free_lines.iter().map(|s| UnicodeWidthStr::width(s.as_str())).max().unwrap_or(0);
+
+    let horizontal_border = format!(
+        "{}{}{}",
+        border_chars.top_left,
+        border_chars.horizontal.to_string().repeat(max_len),
+        border_chars.top_right
+    );
+
+    let mut bordered_string = horizontal_border.clone() + "\n";
+
+    for (line, ansi_free_line) in lines.iter().zip(ansi_free_lines.iter()) {
+        let padding = " ".repeat(max_len - UnicodeWidthStr::width(ansi_free_line.as_str()));
+        bordered_string += &format!(
+            "{}{}{}{}\n",
+            border_chars.vertical,
+            line,
+            padding,
+            border_chars.vertical
+        );
+    }
+
+    bordered_string += &format!(
+        "{}{}{}",
+        border_chars.bottom_left,
+        border_chars.horizontal.to_string().repeat(max_len),
+        border_chars.bottom_right
+    );
+
+    bordered_string
+}
+
+fn add_padding(string: String, padding: Padding) -> String {
+    let mut result: String = string;
+    result = add_upper_padding(result, padding.top);
+    result = add_lower_padding(result, padding.bottom);
+    result = add_left_padding(result, padding.left);
+    result = add_right_padding(result, padding.right);
+    result
+}
+
+fn add_upper_padding(string: String, padding: u8) -> String {
+    let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
+        .map(UnicodeWidthStr::width)
+        .max()
+        .unwrap_or(0);
+    let mut result: String = String::new();
+    for _ in 0..padding {
+        result.push_str(&" ".repeat(max_width));
+        result.push('\n');
+    }
+    result.push_str(&string);
+    result
+}
+
+fn add_lower_padding(string: String, padding: u8) -> String {
+    let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
+        .map(UnicodeWidthStr::width)
+        .max()
+        .unwrap_or(0);
+    let mut result: String = string;
+    for _ in 0..padding {
+        result.push('\n');
+        result.push_str(&" ".repeat(max_width));
+    }
+    result
+}
+
+fn add_left_padding(string: String, padding: u8) -> String {
+    let mut result: String = String::new();
+    for line in string.lines() {
+        result.push_str(&" ".repeat(padding as usize));
+        result.push_str(line);
+        result.push('\n');
+    }
+    result
+}
+
+fn add_right_padding(string: String, padding: u8) -> String {
+    let mut result: String = String::new();
+    for line in string.lines() {
+        result.push_str(line);
+        result.push_str(&" ".repeat(padding as usize));
+        result.push('\n');
+    }
+    result
 }
 
 fn reset_formatting_on_cr(string: String) -> String {
@@ -71,7 +182,7 @@ fn place_blocks_adjacent(blocks: Vec<String>) -> String {
 
     let mut result: String = String::new();
     for line_group in lines {
-        let joined_line: String = line_group.join(" ");
+        let joined_line: String = line_group.join("");
         result.push_str(&joined_line);
         result.push('\n');
     }
@@ -90,7 +201,7 @@ fn vertically_normalize(blocks: Vec<String>) -> Vec<String> {
     for block in blocks {
         let mut lines: Vec<String> = block.lines().map(|s| s.to_string()).collect();
         let width: usize = if let Some(first_line) = lines.first() {
-            first_line.len()
+            UnicodeWidthStr::width(remove_ansi_escape_codes(first_line.clone()).as_str())
         } else {
             0
         };
@@ -106,7 +217,7 @@ fn vertically_normalize(blocks: Vec<String>) -> Vec<String> {
 }
 
 fn remove_ansi_escape_codes(s: String) -> String {
-    let re: Regex = Regex::new(r"\x1B\[[0-?]*[ -/]*[@-~]").unwrap();
+    let re: Regex = Regex::new(r"\x1B\[[0-?]*[- /]*[@-~]").unwrap();
     re.replace_all(&s, "").to_string()
 }
 

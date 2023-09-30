@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use crate::config::toml::{DEFAULT_TOML_CONFIG, TomlConfig};
 use toml::{from_str, to_string, Value};
-use toml::map::Map;
 
 const LUA_SCRIPT: &str = include_str!("default.lua");
 
