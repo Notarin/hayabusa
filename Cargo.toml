@@ -21,6 +21,7 @@ serde_yaml = "0.9.25"
 serde = { version = "1.0.188", features = ["derive"] }
 regex = "1.9.5"
 unicode-width = "0.1.11"
+toml = { version = "0.8.1", features = [] }
 
 
 [target.'cfg(windows)'.dependencies]

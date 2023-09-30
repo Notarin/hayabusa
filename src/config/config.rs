@@ -1,7 +1,8 @@
 use std::{env, fs};
+use std::collections::BTreeMap;
 use std::path::Path;
-use serde_yaml::{from_str, to_string};
 use crate::config::toml::{DEFAULT_TOML_CONFIG, TomlConfig};
+use toml::{from_str, to_string, Value};
 
 const LUA_SCRIPT: &str = include_str!("default.lua");
 
@@ -38,12 +39,28 @@ pub(crate) fn get_config_location() -> String {
 
 pub(crate) fn load_toml_config() -> TomlConfig {
     let toml_file_location: String = get_toml_config_location();
-    let string: String = fs::read_to_string(toml_file_location).unwrap_or_else(|_| {
+    let file_contents: String = fs::read_to_string(&toml_file_location).unwrap_or_else(|_| {
         write_default_toml();
         to_string(&DEFAULT_TOML_CONFIG).unwrap()
     });
-    let toml_config: TomlConfig = from_str(&string).unwrap();
-    toml_config
+
+    let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents).unwrap();
+    let default_config: BTreeMap<String, Value> = from_str(&to_string(&DEFAULT_TOML_CONFIG).unwrap()).unwrap();
+
+    let mut is_updated = false;
+    for (key, value) in default_config {
+        if let std::collections::btree_map::Entry::Vacant(e) = loaded_config.entry(key) {
+            e.insert(value);
+            is_updated = true;
+        }
+    }
+
+    if is_updated {
+        let new_config_str: String = to_string(&loaded_config).unwrap();
+        fs::write(toml_file_location, new_config_str).expect("Failed to update config.toml");
+    }
+
+    from_str(&to_string(&loaded_config).unwrap()).unwrap()
 }
 
 fn write_default_toml() {
