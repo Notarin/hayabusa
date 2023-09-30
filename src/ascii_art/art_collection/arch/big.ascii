@@ -1,19 +1,19 @@
 {{color1}}                  -`
-                 .o+`
-                `ooo/
-               `+oooo:
-              `+oooooo:
-              -+oooooo+:
-            `/:-:++oooo+:
-           `/++++/+++++++:
-          `/++++++++++++++:
-         `/+++o{{color9}}oooooooo{{color1}}oooo/`
+{{color1}}                 .o+`
+{{color1}}                `ooo/
+{{color1}}               `+oooo:
+{{color1}}              `+oooooo:
+{{color1}}              -+oooooo+:
+{{color1}}            `/:-:++oooo+:
+{{color1}}           `/++++/+++++++:
+{{color1}}          `/++++++++++++++:
+{{color1}}         `/+++o{{color9}}oooooooo{{color1}}oooo/`
 {{color9}}        {{color1}}./{{color9}}ooosssso++osssssso{{color1}}+`
 {{color9}}       .oossssso-````/ossssss+`
-      -osssssso.      :ssssssso.
-     :osssssss/        osssso+++.
-    /ossssssss/        +ssssooo/-
-  `/ossssso+/:-        -:/+osssso+-
- `+sso+:-`                 `.-/+oso:
-`++:.                           `-/+/
-.`                                 `/{{reset}}
+{{color9}}      -osssssso.      :ssssssso.
+{{color9}}     :osssssss/        osssso+++.
+{{color9}}    /ossssssss/        +ssssooo/-
+{{color9}}  `/ossssso+/:-        -:/+osssso+-
+{{color9}} `+sso+:-`                 `.-/+oso:
+{{color9}}`++:.                           `-/+/
+{{color9}}.`                                 `/{{reset}}
