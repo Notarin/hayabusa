@@ -63,15 +63,13 @@ fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) {
                 e.insert(value.clone());
             },
             std::collections::btree_map::Entry::Occupied(mut e) => {
-                if let Value::Table(ref mut a_inner) = e.get_mut() {
+                if let Value::Table(a_inner) = e.get_mut() {
                     if let Value::Table(ref b_inner) = value {
                         let mut a_btree: BTreeMap<String, Value> = a_inner.clone().into_iter().collect();
                         let b_btree: BTreeMap<String, Value> = b_inner.clone().into_iter().collect();
                         merge_maps(&mut a_btree, &b_btree);
-                        *a_inner = a_btree.into_iter().collect::<Map<String, Value>>();
+                        *a_inner = a_btree.into_iter().collect();  // Modified line
                     }
-                } else {
-                    e.insert(value.clone());
                 }
             },
         }
