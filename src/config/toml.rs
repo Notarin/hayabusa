@@ -14,7 +14,7 @@ pub(crate) struct TomlConfig {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct Spacing {
-    pub(crate) middle_margin: u8,
+    pub(crate) middle_padding: u8,
     pub(crate) inner_padding: Padding,
     pub(crate) outer_padding: Padding,
 }
@@ -45,7 +45,7 @@ pub(crate) struct BorderChars {
 
 pub(crate) const DEFAULT_TOML_CONFIG: TomlConfig = TomlConfig {
     spacing: Spacing {
-        middle_margin: 4,
+        middle_padding: 4,
         inner_padding: Padding {
             top: 2,
             bottom: 2,

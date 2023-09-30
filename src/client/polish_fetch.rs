@@ -19,10 +19,10 @@ fn reset_formatting_on_cr(string: String) -> String {
 
 fn add_ascii_art(ascii_art: String, fetch: String) -> String {
     let toml_config: TomlConfig = TOML_CONFIG_OBJECT.clone();
-    let margin: u8 = toml_config.spacing.middle_margin;
+    let padding: u8 = toml_config.spacing.middle_padding;
     let blocks: Vec<String> = vec![
         ascii_art,
-        " ".repeat(margin as usize),
+        " ".repeat(padding as usize),
         fetch
     ];
     place_blocks_adjacent(blocks)
