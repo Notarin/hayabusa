@@ -1,8 +1,7 @@
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::client::main::get_ascii_art;
-use crate::config::config::load_toml_config;
-use crate::config::toml::TomlConfig;
+use crate::config::toml::{TOML_CONFIG_OBJECT, TomlConfig};
 use crate::daemon::fetch_info::SystemInfo;
 
 pub(crate) fn main(system_info: SystemInfo, mut fetch: String) -> String {
@@ -19,7 +18,7 @@ fn reset_formatting_on_cr(string: String) -> String {
 }
 
 fn add_ascii_art(ascii_art: String, fetch: String) -> String {
-    let toml_config: TomlConfig = load_toml_config();
+    let toml_config: TomlConfig = TOML_CONFIG_OBJECT.clone();
     let margin: u8 = toml_config.spacing.middle_margin;
     let blocks: Vec<String> = vec![
         ascii_art,
