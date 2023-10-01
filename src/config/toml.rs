@@ -10,6 +10,7 @@ lazy_static!(
 pub(crate) struct TomlConfig {
     pub(crate) spacing: Spacing,
     pub(crate) border: Border,
+    pub(crate) ascii_art: AsciiArt,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -44,6 +45,17 @@ pub(crate) struct BorderChars {
     pub(crate) vertical: char,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) struct AsciiArt {
+    pub(crate) size: AsciiSize,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) enum AsciiSize {
+    Small,
+    Big,
+}
+
 pub(crate) fn build_default_toml() -> TomlConfig {
     TomlConfig {
         spacing: Spacing {
@@ -72,6 +84,9 @@ pub(crate) fn build_default_toml() -> TomlConfig {
                 horizontal: '─',
                 vertical: '│',
             },
+        },
+        ascii_art: AsciiArt {
+            size: AsciiSize::Big,
         },
     }
 }

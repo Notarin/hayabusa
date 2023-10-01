@@ -5,6 +5,7 @@ use rlua::{Lua, Table};
 use crate::{ascii_art, SOCKET_PATH};
 use crate::client::polish_fetch;
 use crate::config::config::{load_lua_config};
+use crate::config::toml::{AsciiSize, TOML_CONFIG_OBJECT, TomlConfig};
 use crate::daemon::fetch_info::SystemInfo;
 
 pub(crate) fn main() {
@@ -73,9 +74,14 @@ fn execute_lua(system_info: SystemInfo) -> String {
 }
 
 pub(crate) fn get_ascii_art(distro: String) -> String {
-    match distro.as_str() {
-        "Arch Linux" => ascii_art::main::ALL_ART.arch.big,
-        "Windows" => ascii_art::main::ALL_ART.windows.big,
-        _ => "none",
+    let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
+    let art_distro = match distro.as_str() {
+        "Arch Linux" => ascii_art::main::ALL_ART.arch,
+        "Windows" => ascii_art::main::ALL_ART.windows,
+        _ => ascii_art::main::ALL_ART.arch,
+    };
+    match config.ascii_art.size {
+        AsciiSize::Big => art_distro.big,
+        AsciiSize::Small => art_distro.small,
     }.to_string()
 }
