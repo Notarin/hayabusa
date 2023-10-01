@@ -29,6 +29,7 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
     let max_len: usize = ansi_free_lines.iter().map(|s| UnicodeWidthStr::width(s.as_str())).max().unwrap_or(0);
     let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
     let ansi_color: String = parse_ascii_art(config.border.ansi_color.clone());
+    let color_reset: String = parse_ascii_art("{{reset}}".to_string());
 
     let horizontal_border = format!(
         "{}{}{}{}{}",
@@ -36,7 +37,7 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
         border_chars.top_left,
         border_chars.horizontal.to_string().repeat(max_len),
         border_chars.top_right,
-        ansi_color,
+        color_reset,
     );
 
     let mut bordered_string = horizontal_border.clone() + "\n";
@@ -47,12 +48,12 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
             "{}{}{}{}{}{}{}{}\n",
             ansi_color,
             border_chars.vertical,
-            ansi_color,
+            color_reset,
             line,
             padding,
             ansi_color,
             border_chars.vertical,
-            ansi_color,
+            color_reset,
         );
     }
 
@@ -62,7 +63,7 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
         border_chars.bottom_left,
         border_chars.horizontal.to_string().repeat(max_len),
         border_chars.bottom_right,
-        ansi_color,
+        color_reset,
     );
 
     bordered_string
@@ -78,50 +79,70 @@ fn add_padding(string: String, padding: Padding) -> String {
 }
 
 fn add_upper_padding(string: String, padding: u8) -> String {
-    let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
-        .map(UnicodeWidthStr::width)
-        .max()
-        .unwrap_or(0);
-    let mut result: String = String::new();
-    for _ in 0..padding {
-        result.push_str(&" ".repeat(max_width));
-        result.push('\n');
+    if padding > 0 {
+        let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
+            .map(UnicodeWidthStr::width)
+            .max()
+            .unwrap_or(0);
+        let mut result: String = String::new();
+        for _ in 0..padding {
+            result.push_str(&" ".repeat(max_width));
+            result.push('\n');
+        }
+        result.push_str(&string);
+        result
     }
-    result.push_str(&string);
-    result
+    else {
+        string
+    }
 }
 
 fn add_lower_padding(string: String, padding: u8) -> String {
-    let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
-        .map(UnicodeWidthStr::width)
-        .max()
-        .unwrap_or(0);
-    let mut result: String = string;
-    for _ in 0..padding {
-        result.push('\n');
-        result.push_str(&" ".repeat(max_width));
+    if padding > 0 {
+        let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
+            .map(UnicodeWidthStr::width)
+            .max()
+            .unwrap_or(0);
+        let mut result: String = string;
+        for _ in 0..padding {
+            result.push('\n');
+            result.push_str(&" ".repeat(max_width));
+        }
+        result
     }
-    result
+    else {
+        string
+    }
 }
 
 fn add_left_padding(string: String, padding: u8) -> String {
-    let mut result: String = String::new();
-    for line in string.lines() {
-        result.push_str(&" ".repeat(padding as usize));
-        result.push_str(line);
-        result.push('\n');
+    if padding > 0 {
+        let mut result: String = String::new();
+        for line in string.lines() {
+            result.push_str(&" ".repeat(padding as usize));
+            result.push_str(line);
+            result.push('\n');
+        }
+        result
     }
-    result
+    else {
+        string
+    }
 }
 
 fn add_right_padding(string: String, padding: u8) -> String {
-    let mut result: String = String::new();
-    for line in string.lines() {
-        result.push_str(line);
-        result.push_str(&" ".repeat(padding as usize));
-        result.push('\n');
+    if padding > 0 {
+        let mut result: String = String::new();
+        for line in string.lines() {
+            result.push_str(line);
+            result.push_str(&" ".repeat(padding as usize));
+            result.push('\n');
+        }
+        result
     }
-    result
+    else {
+        string
+    }
 }
 
 fn reset_formatting_on_cr(string: String) -> String {
