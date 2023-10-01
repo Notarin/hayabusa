@@ -1,8 +1,8 @@
-{{color1}}       .
-{{color1}}      / \
-{{color1}}     /   \
-{{color1}}    /^.   \
-{{color1}}   /  .-.  \
-{{color1}}  /  (   ) _\
-{{color9}} / _.~   ~._^\
-{{color9}}/.^         ^.\{{reset}}
+{{color12}}       .
+{{color12}}      / \
+{{color12}}     /   \
+{{color12}}    /^.   \
+{{color12}}   /  .-.  \
+{{color12}}  /  (   ) _\
+{{color4}} / _.~   ~._^\
+{{color4}}/.^         ^.\{{reset}}
