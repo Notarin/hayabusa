@@ -1,7 +1,7 @@
 use std::{env, fs};
 use std::collections::BTreeMap;
 use std::path::Path;
-use crate::config::toml::{DEFAULT_TOML_CONFIG, TomlConfig};
+use crate::config::toml::{build_default_toml, TomlConfig};
 use toml::{from_str, to_string, Value};
 
 const LUA_SCRIPT: &str = include_str!("default.lua");
@@ -41,11 +41,11 @@ pub(crate) fn load_toml_config() -> TomlConfig {
     let toml_file_location: String = get_toml_config_location();
     let file_contents: String = fs::read_to_string(&toml_file_location).unwrap_or_else(|_| {
         write_default_toml();
-        to_string(&DEFAULT_TOML_CONFIG).unwrap()
+        to_string(&build_default_toml()).unwrap()
     });
 
     let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents).unwrap();
-    let default_config: BTreeMap<String, Value> = from_str(&to_string(&DEFAULT_TOML_CONFIG).unwrap()).unwrap();
+    let default_config: BTreeMap<String, Value> = from_str(&to_string(&build_default_toml()).unwrap()).unwrap();
 
     merge_maps(&mut loaded_config, &default_config);
 
@@ -82,7 +82,7 @@ fn write_default_toml() {
     if !parent_dir.exists() {
         fs::create_dir_all(parent_dir).expect("Failed to create config directory");
     }
-    let contents = to_string(&DEFAULT_TOML_CONFIG).unwrap();
+    let contents = to_string(&build_default_toml()).unwrap();
     fs::write(toml_file_location, contents)
         .expect("Failed to write default config.toml");
 }

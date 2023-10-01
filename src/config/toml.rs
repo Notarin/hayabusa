@@ -30,6 +30,7 @@ pub(crate) struct Padding {
 #[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct Border {
     pub(crate) enabled: bool,
+    pub(crate) ansi_color: String,
     pub(crate) border_chars: BorderChars,
 }
 
@@ -43,31 +44,34 @@ pub(crate) struct BorderChars {
     pub(crate) vertical: char,
 }
 
-pub(crate) const DEFAULT_TOML_CONFIG: TomlConfig = TomlConfig {
-    spacing: Spacing {
-        middle_padding: 4,
-        inner_padding: Padding {
-            top: 1,
-            bottom: 1,
-            left: 2,
-            right: 2,
+pub(crate) fn build_default_toml() -> TomlConfig {
+    TomlConfig {
+        spacing: Spacing {
+            middle_padding: 4,
+            inner_padding: Padding {
+                top: 1,
+                bottom: 1,
+                left: 2,
+                right: 2,
+            },
+            outer_padding: Padding {
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+            },
         },
-        outer_padding: Padding {
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
+        border: Border {
+            enabled: true,
+            ansi_color: String::from("{{color11}}"),
+            border_chars: BorderChars {
+                top_left: '╭',
+                top_right: '╮',
+                bottom_left: '╰',
+                bottom_right: '╯',
+                horizontal: '─',
+                vertical: '│',
+            },
         },
-    },
-    border: Border {
-        enabled: true,
-        border_chars: BorderChars {
-            top_left: '╭',
-            top_right: '╮',
-            bottom_left: '╰',
-            bottom_right: '╯',
-            horizontal: '─',
-            vertical: '│',
-        },
-    },
-};
+    }
+}
