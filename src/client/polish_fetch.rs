@@ -80,67 +80,52 @@ fn add_padding(string: String, padding: Padding) -> String {
 
 fn add_upper_padding(string: String, padding: u8) -> String {
     if padding > 0 {
-        let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
+        let max_width = remove_ansi_escape_codes(string.clone()).lines()
             .map(UnicodeWidthStr::width)
             .max()
             .unwrap_or(0);
-        let mut result: String = String::new();
-        for _ in 0..padding {
-            result.push_str(&" ".repeat(max_width));
-            result.push('\n');
-        }
-        result.push_str(&string);
-        result
-    }
-    else {
+
+        let upper_padding = vec![" ".repeat(max_width); padding as usize].join("\n");
+
+        format!("{}\n{}", upper_padding, string)
+    } else {
         string
     }
 }
 
 fn add_lower_padding(string: String, padding: u8) -> String {
     if padding > 0 {
-        let max_width: usize = remove_ansi_escape_codes(string.clone()).lines()
+        let max_width = remove_ansi_escape_codes(string.clone()).lines()
             .map(UnicodeWidthStr::width)
             .max()
             .unwrap_or(0);
-        let mut result: String = string;
-        for _ in 0..padding {
-            result.push('\n');
-            result.push_str(&" ".repeat(max_width));
-        }
-        result
-    }
-    else {
+
+        let lower_padding = vec![" ".repeat(max_width); padding as usize].join("\n");
+
+        format!("{}\n{}", string, lower_padding)
+    } else {
         string
     }
 }
 
 fn add_left_padding(string: String, padding: u8) -> String {
     if padding > 0 {
-        let mut result: String = String::new();
-        for line in string.lines() {
-            result.push_str(&" ".repeat(padding as usize));
-            result.push_str(line);
-            result.push('\n');
-        }
-        result
-    }
-    else {
+        string.lines()
+            .map(|line| format!("{}{}", " ".repeat(padding as usize), line))
+            .collect::<Vec<String>>()
+            .join("\n")
+    } else {
         string
     }
 }
 
 fn add_right_padding(string: String, padding: u8) -> String {
     if padding > 0 {
-        let mut result: String = String::new();
-        for line in string.lines() {
-            result.push_str(line);
-            result.push_str(&" ".repeat(padding as usize));
-            result.push('\n');
-        }
-        result
-    }
-    else {
+        string.lines()
+            .map(|line| format!("{}{}", line, " ".repeat(padding as usize)))
+            .collect::<Vec<String>>()
+            .join("\n")
+    } else {
         string
     }
 }
