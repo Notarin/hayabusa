@@ -6,20 +6,20 @@ lazy_static!(
     pub(crate) static ref TOML_CONFIG_OBJECT: TomlConfig = load_toml_config();
 );
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct TomlConfig {
     pub(crate) spacing: Spacing,
     pub(crate) border: Border,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct Spacing {
     pub(crate) middle_padding: u8,
     pub(crate) inner_padding: Padding,
     pub(crate) outer_padding: Padding,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct Padding {
     pub(crate) top: u8,
     pub(crate) bottom: u8,
@@ -27,7 +27,7 @@ pub(crate) struct Padding {
     pub(crate) right: u8,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct Border {
     pub(crate) enabled: bool,
     pub(crate) ansi_color: String,
