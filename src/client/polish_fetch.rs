@@ -23,18 +23,10 @@ pub(crate) fn main(system_info: SystemInfo, mut fetch: String) -> String {
     reset_formatting_on_cr(full_fetch)
 }
 
-fn debug_line_lengths(string: &str) {
-    // use unicode_width::UnicodeWidthStr;
-    for line in string.lines() {
-        println!("Length: {}", UnicodeWidthStr::width(line));
-    }
-}
-
 fn add_border(string: String, border_chars: &BorderChars) -> String {
     let lines: Vec<&str> = string.lines().collect();
     let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes((*s).to_string())).collect();
     for ansi_free_line in &ansi_free_lines {
-        println!("Width: {}", UnicodeWidthStr::width(ansi_free_line.as_str()));
     }
     let max_len: usize = ansi_free_lines.iter().map(|s| UnicodeWidthStr::width(s.as_str())).max().unwrap_or(0);
 
