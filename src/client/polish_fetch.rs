@@ -27,12 +27,16 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
     let lines: Vec<&str> = string.lines().collect();
     let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes((*s).to_string())).collect();
     let max_len: usize = ansi_free_lines.iter().map(|s| UnicodeWidthStr::width(s.as_str())).max().unwrap_or(0);
+    let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
+    let ansi_color: String = parse_ascii_art(config.border.ansi_color.clone());
 
     let horizontal_border = format!(
-        "{}{}{}",
+        "{}{}{}{}{}",
+        ansi_color,
         border_chars.top_left,
         border_chars.horizontal.to_string().repeat(max_len),
-        border_chars.top_right
+        border_chars.top_right,
+        ansi_color,
     );
 
     let mut bordered_string = horizontal_border.clone() + "\n";
@@ -40,19 +44,25 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
     for (line, ansi_free_line) in lines.iter().zip(ansi_free_lines.iter()) {
         let padding = " ".repeat(max_len - UnicodeWidthStr::width(ansi_free_line.as_str()));
         bordered_string += &format!(
-            "{}{}{}{}\n",
+            "{}{}{}{}{}{}{}{}\n",
+            ansi_color,
             border_chars.vertical,
+            ansi_color,
             line,
             padding,
-            border_chars.vertical
+            ansi_color,
+            border_chars.vertical,
+            ansi_color,
         );
     }
 
     bordered_string += &format!(
-        "{}{}{}",
+        "{}{}{}{}{}",
+        ansi_color,
         border_chars.bottom_left,
         border_chars.horizontal.to_string().repeat(max_len),
-        border_chars.bottom_right
+        border_chars.bottom_right,
+        ansi_color,
     );
 
     bordered_string
