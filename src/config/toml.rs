@@ -11,6 +11,7 @@ pub(crate) struct TomlConfig {
     pub(crate) spacing: Spacing,
     pub(crate) border: Border,
     pub(crate) ascii_art: AsciiArt,
+    pub(crate) client_features: ClientFeatures,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -56,6 +57,12 @@ pub(crate) enum AsciiSize {
     Big,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) struct ClientFeatures {
+    pub(crate) experimental_features: bool,
+    pub(crate) environment_variables: bool,
+}
+
 pub(crate) fn build_default_toml() -> TomlConfig {
     TomlConfig {
         spacing: Spacing {
@@ -87,6 +94,10 @@ pub(crate) fn build_default_toml() -> TomlConfig {
         },
         ascii_art: AsciiArt {
             size: AsciiSize::Big,
+        },
+        client_features: ClientFeatures {
+            experimental_features: false,
+            environment_variables: true,
         },
     }
 }

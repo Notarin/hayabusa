@@ -1,4 +1,5 @@
 use rlua::{Context, Lua, Table};
+use crate::client::client_info::main::environmental_variable_table;
 use crate::config::config::load_lua_config;
 use crate::daemon::fetch_info::SystemInfo;
 
@@ -12,6 +13,7 @@ pub(crate) fn execute_lua(system_info: SystemInfo) -> String {
         let globals: Table = lua_ctx.globals();
         let simple_table = system_info_table(system_info, lua_ctx);
         globals.set("system_info", simple_table).unwrap();
+        globals.set("environmental_variables", environmental_variable_table(lua_ctx)).unwrap();
 
         let result: String = match lua_ctx.load(&lua_config).exec() {
             Ok(_) => globals.get("result").unwrap(),
