@@ -329,7 +329,7 @@ pub(crate) async fn get_hostname() -> String {
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
-            system_info.motherboard = string.clone();
+            system_info.hostname = string.clone();
         }
     }
     string
