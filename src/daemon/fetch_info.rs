@@ -26,6 +26,7 @@ pub(crate) struct SystemInfo {
     pub(crate) disks: Vec<Disk>,
     pub(crate) local_ip: String,
     pub(crate) public_ip: String,
+    pub(crate) hostname: String,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -56,6 +57,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     let disks_future: JoinHandle<Vec<Disk>> = tokio::spawn(get_disks());
     let local_ip_future: JoinHandle<String> = tokio::spawn(get_local_ip_address());
     let public_ip_future: JoinHandle<String> = tokio::spawn(get_public_ip_address());
+    let hostname_future: JoinHandle<String> = tokio::spawn(get_hostname());
 
     let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
     let distro: String = distro_future.await.expect("get_distro thread panicked!");
@@ -66,6 +68,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     let disks: Vec<Disk> = disks_future.await.expect("get_disks thread panicked!");
     let local_ip: String = local_ip_future.await.expect("get_local_ip_address thread panicked!");
     let public_ip: String = public_ip_future.await.expect("get_public_ip_address thread panicked!");
+    let hostname: String = hostname_future.await.expect("get_hostname thread panicked!");
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -77,6 +80,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
         disks,
         local_ip,
         public_ip,
+        hostname,
     };
     system_info
 }
@@ -103,6 +107,7 @@ pub(crate) async fn loop_update_system_info() {
         get_disks().await;
         get_local_ip_address().await;
         get_public_ip_address().await;
+        get_hostname().await;
     }
 }
 
@@ -307,6 +312,24 @@ pub(crate) async fn get_public_ip_address() -> String {
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
             system_info.public_ip = string.clone();
+        }
+    }
+    string
+}
+
+#[cfg(target_os = "linux")]
+pub(crate) async fn get_hostname() -> String {
+    use std::fs;
+    let string: String = fs::read_to_string("/etc/hostname")
+        .unwrap_or(String::from("Unknown"))
+        .trim()
+        .to_string();
+    {
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+            .expect("Failed to lock system info mutex");
+        let system_info_option: Option<&mut SystemInfo> = option.as_mut();
+        if let Some(system_info) = system_info_option {
+            system_info.motherboard = string.clone();
         }
     }
     string

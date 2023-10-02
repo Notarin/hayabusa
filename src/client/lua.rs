@@ -40,6 +40,7 @@ fn system_info_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
     table.set("disks", disks_table).unwrap();
     table.set("local_ip", &*system_info.local_ip).unwrap();
     table.set("public_ip", &*system_info.public_ip).unwrap();
+    table.set("hostname", &*system_info.hostname).unwrap();
     table
 }
 
