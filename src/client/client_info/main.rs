@@ -4,7 +4,6 @@ use rlua::{Context, Table};
 pub(crate) fn get_environmental_variables() -> HashMap<String, String> {
     let mut env_vars: HashMap<String, String> = HashMap::new();
     for (key, value) in std::env::vars() {
-        println!("{}: {}", key, value);
         env_vars.insert(key, value);
     }
     env_vars
