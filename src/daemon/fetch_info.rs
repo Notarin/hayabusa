@@ -1,3 +1,4 @@
+use std::process::Output;
 use std::sync::{Mutex, MutexGuard};
 use reqwest::Client;
 use std::time::Duration;
@@ -338,6 +339,27 @@ pub(crate) async fn get_hostname() -> String {
         }
     }
     string
+}
+
+#[cfg(target_os = "windows")]
+pub(crate) async fn get_hostname() -> String {
+    let output: Output = std::process::Command::new("hostname")
+        .output()
+        .expect("Failed to execute command");
+
+    let hostname: String = String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .to_string();
+
+    {
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+            .expect("Failed to lock system info mutex");
+        let system_info_option: Option<&mut SystemInfo> = option.as_mut();
+        if let Some(system_info) = system_info_option {
+            system_info.hostname = hostname.clone();
+        }
+    }
+    hostname
 }
 
 pub(crate) async fn get_boot_time() -> u64 {
