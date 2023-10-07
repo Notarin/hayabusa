@@ -159,14 +159,8 @@ pub(crate) async fn get_motherboard() -> String {
         .unwrap_or(String::from("Unknown"))
         .trim()
         .to_string();
-    {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
-            .expect("Failed to lock system info mutex");
-        let system_info_option: Option<&mut SystemInfo> = option.as_mut();
-        if let Some(system_info) = system_info_option {
-            system_info.motherboard = string.clone();
-        }
-    }
+
+    push_motherboard_value(&string);
     string
 }
 
@@ -187,15 +181,17 @@ pub(crate) async fn get_motherboard() -> String {
         Err(_) => String::from("Unknown"),
     };
 
-    {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
-            .expect("Failed to lock system info mutex");
-        let system_info_option: Option<&mut SystemInfo> = option.as_mut();
-        if let Some(system_info) = system_info_option {
-            system_info.motherboard = string.clone();
-        }
-    }
+    push_motherboard_value(&string);
     string
+}
+
+fn push_motherboard_value(string: &str) {
+    let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        .expect("Failed to lock system info mutex");
+    let system_info_option: Option<&mut SystemInfo> = option.as_mut();
+    if let Some(system_info) = system_info_option {
+        system_info.motherboard = string.to_string();
+    }
 }
 
 pub(crate) async fn get_kernel() -> String {
@@ -335,14 +331,8 @@ pub(crate) async fn get_hostname() -> String {
         .unwrap_or(String::from("Unknown"))
         .trim()
         .to_string();
-    {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
-            .expect("Failed to lock system info mutex");
-        let system_info_option: Option<&mut SystemInfo> = option.as_mut();
-        if let Some(system_info) = system_info_option {
-            system_info.hostname = string.clone();
-        }
-    }
+
+    push_hostname(&string);
     string
 }
 
@@ -356,15 +346,17 @@ pub(crate) async fn get_hostname() -> String {
         .trim()
         .to_string();
 
-    {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
-            .expect("Failed to lock system info mutex");
-        let system_info_option: Option<&mut SystemInfo> = option.as_mut();
-        if let Some(system_info) = system_info_option {
-            system_info.hostname = hostname.clone();
-        }
-    }
+    push_hostname(&string);
     hostname
+}
+
+fn push_hostname(string: &str) {
+    let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        .expect("Failed to lock system info mutex");
+    let system_info_option: Option<&mut SystemInfo> = option.as_mut();
+    if let Some(system_info) = system_info_option {
+        system_info.hostname = string.to_string();
+    }
 }
 
 pub(crate) async fn get_boot_time() -> u64 {

@@ -78,36 +78,26 @@ fn add_padding(string: String, padding: Padding) -> String {
     result
 }
 
-fn add_upper_padding(string: String, padding: u8) -> String {
-    if padding > 0 {
-        let max_width = remove_ansi_escape_codes(string.clone()).lines()
-            .map(UnicodeWidthStr::width)
-            .max()
-            .unwrap_or(0);
-
-        let upper_padding = vec![" ".repeat(max_width); padding as usize].join("\n");
-
-        format!("{}\n{}", upper_padding, string)
-    } else {
-        string
+fn calculate_padding(string: &str, padding: u8) -> String {
+    if padding == 0 {
+        return String::new();
     }
+    let max_width = remove_ansi_escape_codes(string.to_string()).lines()
+        .map(UnicodeWidthStr::width)
+        .max()
+        .unwrap_or(0);
+    vec![" ".repeat(max_width); padding as usize].join("\n")
+}
+
+fn add_upper_padding(string: String, padding: u8) -> String {
+    let upper_padding = calculate_padding(&string, padding);
+    format!("{}\n{}", upper_padding, string)
 }
 
 fn add_lower_padding(string: String, padding: u8) -> String {
-    if padding > 0 {
-        let max_width = remove_ansi_escape_codes(string.clone()).lines()
-            .map(UnicodeWidthStr::width)
-            .max()
-            .unwrap_or(0);
-
-        let lower_padding = vec![" ".repeat(max_width); padding as usize].join("\n");
-
-        format!("{}\n{}", string, lower_padding)
-    } else {
-        string
-    }
+    let lower_padding = calculate_padding(&string, padding);
+    format!("{}\n{}", string, lower_padding)
 }
-
 fn add_left_padding(string: String, padding: u8) -> String {
     if padding > 0 {
         string.lines()
