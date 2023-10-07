@@ -11,6 +11,7 @@ use lazy_static::lazy_static;
 use tokio::task::JoinHandle;
 use serde::{Deserialize, Serialize};
 use crate::daemon::main::SYSTEM_INFO_MUTEX;
+use crate::daemon::package_managers::{get_package_count, Packages};
 
 lazy_static! {
     pub(crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
@@ -29,6 +30,7 @@ pub(crate) struct SystemInfo {
     pub(crate) public_ip: String,
     pub(crate) hostname: String,
     pub(crate) boot_time: u64,
+    pub(crate) packages: Packages,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -61,6 +63,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     let public_ip_future: JoinHandle<String> = tokio::spawn(get_public_ip_address());
     let hostname_future: JoinHandle<String> = tokio::spawn(get_hostname());
     let boot_time_future: JoinHandle<u64> = tokio::spawn(get_boot_time());
+    let packages_furture: JoinHandle<Packages> = tokio::spawn(get_package_count());
 
     let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
     let distro: String = distro_future.await.expect("get_distro thread panicked!");
@@ -73,6 +76,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     let public_ip: String = public_ip_future.await.expect("get_public_ip_address thread panicked!");
     let hostname: String = hostname_future.await.expect("get_hostname thread panicked!");
     let boot_time: u64 = boot_time_future.await.expect("get_boot_time thread panicked!");
+    let packages: Packages = packages_furture.await.expect("get_package_count thread panicked!");
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -86,6 +90,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
         public_ip,
         hostname,
         boot_time,
+        packages,
     };
     system_info
 }
@@ -114,6 +119,7 @@ pub(crate) async fn loop_update_system_info() {
         get_public_ip_address().await;
         get_hostname().await;
         get_boot_time().await;
+        get_package_count().await;
     }
 }
 
