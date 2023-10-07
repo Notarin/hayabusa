@@ -1,6 +1,6 @@
 use rlua::{Context, Lua, Table};
 use crate::client::client_info::main::environmental_variable_table;
-use crate::config::config::load_lua_config;
+use crate::config::main::load_lua_config;
 use crate::daemon::fetch_info::{Disk, SystemInfo};
 use crate::daemon::package_managers::Packages;
 
