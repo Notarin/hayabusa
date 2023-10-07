@@ -159,7 +159,6 @@ result = config.header ..
          config.memory ..
          config.disk ..
          config.local_ip ..
-         config.public_ip ..
          config.uptime ..
          config.shell ..
          config.desktop_environment ..
