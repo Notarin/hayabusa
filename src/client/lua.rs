@@ -1,7 +1,8 @@
 use rlua::{Context, Lua, Table};
 use crate::client::client_info::main::environmental_variable_table;
 use crate::config::config::load_lua_config;
-use crate::daemon::fetch_info::SystemInfo;
+use crate::daemon::fetch_info::{Disk, SystemInfo};
+use crate::daemon::package_managers::Packages;
 
 //noinspection SpellCheckingInspection
 pub(crate) fn execute_lua(system_info: SystemInfo) -> String {
@@ -24,40 +25,56 @@ pub(crate) fn execute_lua(system_info: SystemInfo) -> String {
     fetch
 }
 
-fn system_info_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
+fn system_info_table(
+    SystemInfo {
+        cpu,
+        distro,
+        motherboard,
+        kernel,
+        gpus,
+        memory,
+        disks,
+        local_ip,
+        public_ip,
+        hostname,
+        boot_time,
+        packages
+    }: SystemInfo,
+    lua_ctx: Context
+) -> Table {
     let table: Table = lua_ctx.create_table().unwrap();
-    table.set("distro", &*system_info.distro).unwrap();
-    table.set("cpu", &*system_info.cpu).unwrap();
-    table.set("motherboard", &*system_info.motherboard).unwrap();
-    table.set("kernel", &*system_info.kernel).unwrap();
-    let gpus_table: Table = gpu_table(system_info.clone(), lua_ctx);
+    table.set("distro", &*distro).unwrap();
+    table.set("cpu", &*cpu).unwrap();
+    table.set("motherboard", &*motherboard).unwrap();
+    table.set("kernel", &*kernel).unwrap();
+    let gpus_table: Table = gpu_table(gpus, lua_ctx);
     table.set("gpus", gpus_table).unwrap();
     let memory_table: Table = lua_ctx.create_table().unwrap();
-    memory_table.set("used", system_info.memory.used).unwrap();
-    memory_table.set("total", system_info.memory.total).unwrap();
+    memory_table.set("used", memory.used).unwrap();
+    memory_table.set("total", memory.total).unwrap();
     table.set("memory", memory_table).unwrap();
-    let disks_table = disk_table(system_info.clone(), lua_ctx);
+    let disks_table = disk_table(disks, lua_ctx);
     table.set("disks", disks_table).unwrap();
-    table.set("local_ip", &*system_info.local_ip).unwrap();
-    table.set("public_ip", &*system_info.public_ip).unwrap();
-    table.set("hostname", &*system_info.hostname).unwrap();
-    table.set("boot_time", system_info.boot_time).unwrap();
-    let packages_table: Table = packages_table(system_info.clone(), lua_ctx);
+    table.set("local_ip", &*local_ip).unwrap();
+    table.set("public_ip", &*public_ip).unwrap();
+    table.set("hostname", &*hostname).unwrap();
+    table.set("boot_time", boot_time).unwrap();
+    let packages_table: Table = packages_table(packages, lua_ctx);
     table.set("packages", packages_table).unwrap();
     table
 }
 
-fn packages_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
+fn packages_table(packages: Packages, lua_ctx: Context) -> Table {
     let packages_table: Table = lua_ctx.create_table().unwrap();
-    packages_table.set("pacman", system_info.packages.pacman).unwrap();
-    packages_table.set("winget", system_info.packages.winget).unwrap();
-    packages_table.set("dnf", system_info.packages.dnf).unwrap();
+    packages_table.set("pacman", packages.pacman).unwrap();
+    packages_table.set("winget", packages.winget).unwrap();
+    packages_table.set("dnf", packages.dnf).unwrap();
     packages_table
 }
 
-fn disk_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
+fn disk_table(disks: Vec<Disk>, lua_ctx: Context) -> Table {
     let disks_table: Table = lua_ctx.create_table().unwrap();
-    for (index, disk) in system_info.disks.iter().enumerate() {
+    for (index, disk) in disks.iter().enumerate() {
         let disk_table: Table = lua_ctx.create_table().unwrap();
         disk_table.set("name", disk.name.clone()).unwrap();
         disk_table.set("used", disk.used).unwrap();
@@ -67,9 +84,9 @@ fn disk_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
     disks_table
 }
 
-fn gpu_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
+fn gpu_table(gpus: Vec<String>, lua_ctx: Context) -> Table {
     let gpus_table: Table = lua_ctx.create_table().unwrap();
-    for (index, gpu) in system_info.gpus.iter().enumerate() {
+    for (index, gpu) in gpus.iter().enumerate() {
         gpus_table.set(index + 1, gpu.clone()).unwrap();
     }
     gpus_table
