@@ -1,4 +1,3 @@
-use std::process::Output;
 use std::sync::{Mutex, MutexGuard};
 use reqwest::Client;
 use std::time::Duration;
