@@ -34,7 +34,7 @@ pub(crate) fn get_ascii_art(distro: String) -> String {
     let art_distro = match distro.as_str() {
         "Arch Linux" => ascii_art::main::ALL_ART.arch,
         "Windows" => ascii_art::main::ALL_ART.windows,
-        _ => ascii_art::main::ALL_ART.arch,
+        _ => ascii_art::main::ALL_ART.fallback,
     };
     match config.ascii_art.size {
         AsciiSize::Big => art_distro.big,
