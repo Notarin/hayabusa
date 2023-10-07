@@ -9,9 +9,13 @@ pub(crate) struct Packages {
 }
 
 pub(crate) async fn get_package_count() -> Packages {
-    let pacman: u64 = get_pacman_package_count().await.unwrap_or(0);
-    let winget: u64 = get_winget_package_count().await.unwrap_or(0);
-    let dnf: u64 = get_dnf_package_count().await.unwrap_or(0);
+    let pacman = get_pacman_package_count();
+    let winget = get_winget_package_count();
+    let dnf = get_dnf_package_count();
+
+    let pacman: u64 = pacman.await.unwrap_or(0);
+    let winget: u64 = winget.await.unwrap_or(0);
+    let dnf: u64 = dnf.await.unwrap_or(0);
 
     Packages {
         pacman,
