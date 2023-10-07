@@ -88,6 +88,17 @@ function getDE()
     return de
 end
 
+function getPackages()
+    local packages = "  " .. ansi_green .. "Package" .. " ❯ " .. ansi_reset
+    for package_manager, package in pairs(system_info.packages) do
+        if package > 0 then
+            packages = packages .. package_manager .. ": " .. package .. " "
+        end
+    end
+    packages = packages .. "\n"
+    return packages
+end
+
 -- [Main Configuration]
 -- ====================
 -- Edit the lines below to customize the output.
@@ -109,6 +120,7 @@ local format = {
     shell = "  " .. ansi_green .. "Shell ❯ " .. ansi_reset .. getShell() .. "\n",
     desktop_environment = "  " .. ansi_green .. "DE ❯ " .. ansi_reset .. getDE() .. "\n",
     terminal = "  " .. ansi_green .. "Terminal ❯ " .. ansi_reset .. getTerminal() .. "\n",
+    packages = getPackages(),
 }
 
 -- System Info
@@ -129,6 +141,7 @@ local config = {
     shell =               format.shell,
     desktop_environment = format.desktop_environment,
     terminal =            format.terminal,
+    packages =            format.packages,
     footer = ansi_blue .. "╘═══════════════════════════════════════════╛" .. ansi_reset,
 }
 
@@ -151,4 +164,5 @@ result = config.header ..
          config.shell ..
          config.desktop_environment ..
          config.terminal ..
+         config.packages ..
          config.footer
