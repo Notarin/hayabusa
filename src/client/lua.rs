@@ -42,7 +42,17 @@ fn system_info_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
     table.set("public_ip", &*system_info.public_ip).unwrap();
     table.set("hostname", &*system_info.hostname).unwrap();
     table.set("boot_time", system_info.boot_time).unwrap();
+    let packages_table: Table = packages_table(system_info.clone(), lua_ctx);
+    table.set("packages", packages_table).unwrap();
     table
+}
+
+fn packages_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
+    let packages_table: Table = lua_ctx.create_table().unwrap();
+    packages_table.set("pacman", system_info.packages.pacman).unwrap();
+    packages_table.set("winget", system_info.packages.winget).unwrap();
+    packages_table.set("dnf", system_info.packages.dnf).unwrap();
+    packages_table
 }
 
 fn disk_table(system_info: SystemInfo, lua_ctx: Context) -> Table {
