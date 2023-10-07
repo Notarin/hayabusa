@@ -338,6 +338,7 @@ pub(crate) async fn get_hostname() -> String {
 
 #[cfg(target_os = "windows")]
 pub(crate) async fn get_hostname() -> String {
+    use std::process::Output;
     let output: Output = std::process::Command::new("hostname")
         .output()
         .expect("Failed to execute command");
@@ -346,7 +347,7 @@ pub(crate) async fn get_hostname() -> String {
         .trim()
         .to_string();
 
-    push_hostname(&string);
+    push_hostname(&hostname);
     hostname
 }
 
