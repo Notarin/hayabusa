@@ -24,12 +24,12 @@ pub(crate) fn main() {
         .expect("Failed to deserialize system info");
     let result: String = lua::execute_lua(system_info.clone());
 
-    let fetch: String = polish_fetch::main(system_info, result);
+    let fetch: String = polish_fetch::main(&system_info, result);
 
     println!("{}", fetch);
 }
 
-pub(crate) fn get_ascii_art(distro: String) -> String {
+pub(crate) fn get_ascii_art(distro: &String) -> String {
     let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
     let art_distro = match distro.as_str() {
         "Arch Linux" => ascii_art::main::ALL_ART.arch,
