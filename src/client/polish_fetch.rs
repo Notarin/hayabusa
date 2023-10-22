@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::client::main::get_ascii_art;
@@ -31,7 +32,7 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
     let ansi_color: String = parse_ascii_art(config.border.ansi_color.clone());
     let color_reset: String = parse_ascii_art("{{reset}}".to_string());
 
-    let horizontal_border = format!(
+    let top_horizontal_border = format!(
         "{}{}{}{}{}",
         ansi_color,
         border_chars.top_left,
@@ -40,24 +41,7 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
         color_reset,
     );
 
-    let mut bordered_string = horizontal_border.clone() + "\n";
-
-    for (line, ansi_free_line) in lines.iter().zip(ansi_free_lines.iter()) {
-        let padding = " ".repeat(max_len - UnicodeWidthStr::width(ansi_free_line.as_str()));
-        bordered_string += &format!(
-            "{}{}{}{}{}{}{}{}\n",
-            ansi_color,
-            border_chars.vertical,
-            color_reset,
-            line,
-            padding,
-            ansi_color,
-            border_chars.vertical,
-            color_reset,
-        );
-    }
-
-    bordered_string += &format!(
+    let bottom_horizontal_border = format!(
         "{}{}{}{}{}",
         ansi_color,
         border_chars.bottom_left,
@@ -65,6 +49,34 @@ fn add_border(string: String, border_chars: &BorderChars) -> String {
         border_chars.bottom_right,
         color_reset,
     );
+
+    let estimated_capacity = (max_len + ansi_color.len() + color_reset.len() + 10) * lines.len() + top_horizontal_border.len() + bottom_horizontal_border.len();
+    let mut bordered_string = String::with_capacity(estimated_capacity);
+
+    bordered_string.push_str(&top_horizontal_border);
+    bordered_string.push('\n');
+
+    for i in 0..lines.len() {
+        let line = &lines[i];
+        let ansi_free_line = &ansi_free_lines[i];
+
+        let padding_len = max_len - UnicodeWidthStr::width(ansi_free_line.as_str());
+
+        bordered_string.push_str(&ansi_color);
+        bordered_string.push(border_chars.vertical);
+        bordered_string.push_str(&color_reset);
+        bordered_string.push_str(line);
+        for _ in 0..padding_len {
+            bordered_string.push(' ');
+        }
+        bordered_string.push_str(&ansi_color);
+        bordered_string.push(border_chars.vertical);
+        bordered_string.push_str(&color_reset);
+        bordered_string.push('\n');
+    }
+
+// Corrected this section to only add the bottom border
+    bordered_string.push_str(&bottom_horizontal_border);
 
     bordered_string
 }
@@ -212,8 +224,12 @@ fn vertically_normalize(blocks: Vec<String>) -> Vec<String> {
     normalized_blocks
 }
 
+lazy_static!(
+    static ref ANSI_ESCAPE_CODE_REGEX: Regex = Regex::new(r"\x1B\[[0-?]*[- /]*[@-~]").unwrap();
+);
+
 fn remove_ansi_escape_codes(s: String) -> String {
-    let re: Regex = Regex::new(r"\x1B\[[0-?]*[- /]*[@-~]").unwrap();
+    let re: &ANSI_ESCAPE_CODE_REGEX = &ANSI_ESCAPE_CODE_REGEX;
     re.replace_all(&s, "").to_string()
 }
 

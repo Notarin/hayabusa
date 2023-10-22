@@ -39,26 +39,35 @@ pub(crate) fn get_config_location() -> String {
 
 pub(crate) fn load_toml_config() -> TomlConfig {
     let toml_file_location: String = get_toml_config_location();
-    let file_contents: String = fs::read_to_string(&toml_file_location).unwrap_or_else(|_| {
-        write_default_toml();
-        to_string(&build_default_toml()).unwrap()
-    });
+
+    let file_contents: String = match fs::read_to_string(&toml_file_location) {
+        Ok(contents) => contents,
+        Err(_) => {
+            write_default_toml();
+            to_string(&build_default_toml()).unwrap()
+        }
+    };
 
     let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents).unwrap();
-    let default_config: BTreeMap<String, Value> = from_str(&to_string(&build_default_toml()).unwrap()).unwrap();
+    let default_config_map: BTreeMap<String, Value> = from_str(&to_string(&build_default_toml()).unwrap()).unwrap();
 
-    merge_maps(&mut loaded_config, &default_config);
+    let was_merged = merge_maps(&mut loaded_config, &default_config_map);
 
-    let new_config_str: String = to_string(&loaded_config).unwrap();
-    fs::write(toml_file_location, new_config_str).expect("Failed to update config.toml");
+    if was_merged {
+        let new_config_str: String = to_string(&loaded_config).unwrap();
+        fs::write(toml_file_location, new_config_str).expect("Failed to update config.toml");
+    }
 
     from_str(&to_string(&loaded_config).unwrap()).unwrap()
 }
 
-fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) {
+fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) -> bool {
+    let mut was_merged = false;
+
     for (key, value) in b.iter() {
         match a.entry(key.clone()) {
             std::collections::btree_map::Entry::Vacant(e) => {
+                was_merged = true;
                 e.insert(value.clone());
             },
             std::collections::btree_map::Entry::Occupied(mut e) => {
@@ -66,13 +75,17 @@ fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) {
                     if let Value::Table(ref b_inner) = value {
                         let mut a_btree: BTreeMap<String, Value> = a_inner.clone().into_iter().collect();
                         let b_btree: BTreeMap<String, Value> = b_inner.clone().into_iter().collect();
-                        merge_maps(&mut a_btree, &b_btree);
-                        *a_inner = a_btree.into_iter().collect();  // Modified line
+                        if merge_maps(&mut a_btree, &b_btree) {
+                            was_merged = true;
+                            *a_inner = a_btree.into_iter().collect();
+                        }
                     }
                 }
             },
         }
     }
+
+    was_merged
 }
 
 fn write_default_toml() {
