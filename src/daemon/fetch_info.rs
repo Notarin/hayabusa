@@ -62,7 +62,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     let public_ip_future: JoinHandle<String> = tokio::spawn(get_public_ip_address());
     let hostname_future: JoinHandle<String> = tokio::spawn(get_hostname());
     let boot_time_future: JoinHandle<u64> = tokio::spawn(get_boot_time());
-    let packages_furture: JoinHandle<Packages> = tokio::spawn(get_package_count());
+    let packages_future: JoinHandle<Packages> = tokio::spawn(get_package_count());
 
     let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
     let distro: String = distro_future.await.expect("get_distro thread panicked!");
@@ -75,7 +75,7 @@ pub(crate) async fn fetch_all() -> SystemInfo {
     let public_ip: String = public_ip_future.await.expect("get_public_ip_address thread panicked!");
     let hostname: String = hostname_future.await.expect("get_hostname thread panicked!");
     let boot_time: u64 = boot_time_future.await.expect("get_boot_time thread panicked!");
-    let packages: Packages = packages_furture.await.expect("get_package_count thread panicked!");
+    let packages: Packages = packages_future.await.expect("get_package_count thread panicked!");
 
     let system_info: SystemInfo = SystemInfo {
         cpu,

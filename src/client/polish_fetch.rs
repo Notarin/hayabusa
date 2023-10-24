@@ -25,7 +25,7 @@ pub(crate) fn main(system_info: &SystemInfo, fetch: String) -> String {
 
 fn add_border(string: &str, border_chars: &BorderChars) -> String {
     let lines: Vec<&str> = string.lines().collect();
-    let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes(&*(*s).to_string())).collect();
+    let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes((*s))).collect();
     let max_len: usize = ansi_free_lines.iter().map(|s| UnicodeWidthStr::width(s.as_str())).max().unwrap_or(0);
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let ansi_color: String = parse_ascii_art(&(config.border.ansi_color.clone()));
@@ -209,7 +209,7 @@ fn vertically_normalize(blocks: Vec<&str>) -> Vec<String> {
     for block in blocks {
         let mut lines: Vec<String> = block.lines().map(|s| s.to_string()).collect();
         let width: usize = if let Some(first_line) = lines.first() {
-            UnicodeWidthStr::width(remove_ansi_escape_codes(&*first_line.clone()).as_str())
+            UnicodeWidthStr::width(remove_ansi_escape_codes(&first_line.clone()).as_str())
         } else {
             0
         };
