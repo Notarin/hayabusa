@@ -9,6 +9,7 @@ use gfx_hal::Instance;
 use lazy_static::lazy_static;
 use tokio::task::JoinHandle;
 use serde::{Deserialize, Serialize};
+use tokio::spawn;
 use crate::daemon::main::SYSTEM_INFO_MUTEX;
 use crate::daemon::package_managers::{get_package_count, Packages};
 
@@ -46,23 +47,23 @@ pub(crate) struct Memory {
 }
 
 pub(crate) async fn fetch_all() -> SystemInfo {
-    let cpu_future: JoinHandle<String> = tokio::spawn(get_cpu_name());
-    let distro_future: JoinHandle<String> = tokio::spawn(get_distro());
-    let motherboard_future: JoinHandle<String> = tokio::spawn(get_motherboard());
-    let kernel_future: JoinHandle<String> = tokio::spawn(get_kernel());
-    let gpus_future: JoinHandle<Vec<String>> = tokio::spawn(get_gpus());
-    let memory_future: JoinHandle<Memory> = tokio::spawn(async {
+    let cpu_future: JoinHandle<String> = spawn(get_cpu_name());
+    let distro_future: JoinHandle<String> = spawn(get_distro());
+    let motherboard_future: JoinHandle<String> = spawn(get_motherboard());
+    let kernel_future: JoinHandle<String> = spawn(get_kernel());
+    let gpus_future: JoinHandle<Vec<String>> = spawn(get_gpus());
+    let memory_future: JoinHandle<Memory> = spawn(async {
         Memory {
             used: get_used_memory().await,
             total: get_total_memory().await,
         }
     });
-    let disks_future: JoinHandle<Vec<Disk>> = tokio::spawn(get_disks());
-    let local_ip_future: JoinHandle<String> = tokio::spawn(get_local_ip_address());
-    let public_ip_future: JoinHandle<String> = tokio::spawn(get_public_ip_address());
-    let hostname_future: JoinHandle<String> = tokio::spawn(get_hostname());
-    let boot_time_future: JoinHandle<u64> = tokio::spawn(get_boot_time());
-    let packages_future: JoinHandle<Packages> = tokio::spawn(get_package_count());
+    let disks_future: JoinHandle<Vec<Disk>> = spawn(get_disks());
+    let local_ip_future: JoinHandle<String> = spawn(get_local_ip_address());
+    let public_ip_future: JoinHandle<String> = spawn(get_public_ip_address());
+    let hostname_future: JoinHandle<String> = spawn(get_hostname());
+    let boot_time_future: JoinHandle<u64> = spawn(get_boot_time());
+    let packages_future: JoinHandle<Packages> = spawn(get_package_count());
 
     let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
     let distro: String = distro_future.await.expect("get_distro thread panicked!");

@@ -26,7 +26,7 @@ pub(crate) fn main() {
 
     let fetch: String = polish_fetch::main(&system_info, result);
 
-    println!("{}", fetch);
+    print!("{}", fetch);
 }
 
 pub(crate) fn get_ascii_art(distro: &String) -> String {
