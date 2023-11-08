@@ -2,14 +2,16 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::client::main::get_ascii_art;
-use crate::config::toml::{BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
+use crate::config::toml::{ArtPlacement, BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
 use crate::daemon::fetch_info::SystemInfo;
 
-pub(crate) fn main(system_info: &SystemInfo, fetch: String) -> String {
+pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let mut ascii_art: String = get_ascii_art(&system_info.distro);
     parse_ascii_art(&mut ascii_art);
     normalize(&mut ascii_art);
+    normalize(&mut fetch);
+    // add ascii art
     let mut full_fetch: String = add_ascii_art(&ascii_art, fetch);
     normalize(&mut full_fetch);
     // add inner padding
@@ -134,14 +136,47 @@ fn reset_formatting_on_cr(string: &str) -> String {
 
 fn add_ascii_art(ascii_art: &str, fetch: String) -> String {
     let toml_config: &TomlConfig = &TOML_CONFIG_OBJECT;
+    let placement: &ArtPlacement = &toml_config.ascii_art.placement;
     let padding: u8 = toml_config.spacing.middle_padding;
-    let binding = " ".repeat(padding as usize);
-    let blocks: Vec<&str> = vec![
-        ascii_art,
-        binding.as_str(),
-        &fetch
-    ];
-    place_blocks_adjacent(blocks)
+    let binding: String = " ".repeat(padding as usize);
+
+    let result: String = match placement {
+        ArtPlacement::Left => {
+            let blocks: Vec<&str> = vec![
+                ascii_art,
+                binding.as_str(),
+                &fetch
+            ];
+            place_blocks_adjacent(blocks)
+        }
+        ArtPlacement::Right => {
+            let blocks: Vec<&str> = vec![
+                &fetch,
+                binding.as_str(),
+                ascii_art
+            ];
+            place_blocks_adjacent(blocks)
+        }
+        ArtPlacement::Top => {
+            let transposed_binding: String = transpose_string(binding);
+            let blocks: Vec<&str> = vec![
+                ascii_art,
+                transposed_binding.as_str(),
+                &fetch
+            ];
+            blocks.join("\n")
+        }
+        ArtPlacement::Bottom => {
+            let transposed_binding: String = transpose_string(binding);
+            let blocks: Vec<&str> = vec![
+                &fetch,
+                transposed_binding.as_str(),
+                ascii_art
+            ];
+            blocks.join("\n")
+        }
+    };
+    result
 }
 
 fn normalize(block: &mut String) {
@@ -168,6 +203,17 @@ fn normalize(block: &mut String) {
     }
 
     *block = normalized_lines.join("\n");
+}
+
+fn transpose_string(string: String) -> String {
+    let mut transposed = String::new();
+    for (i, c) in string.chars().enumerate() {
+        if i > 0 {
+            transposed.push('\n');
+        }
+        transposed.push(c);
+    }
+    transposed
 }
 
 fn place_blocks_adjacent(blocks: Vec<&str>) -> String {

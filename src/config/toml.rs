@@ -49,6 +49,15 @@ pub(crate) struct BorderChars {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct AsciiArt {
     pub(crate) size: AsciiSize,
+    pub(crate) placement: ArtPlacement,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) enum ArtPlacement {
+    Top,
+    Bottom,
+    Left,
+    Right,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -94,6 +103,7 @@ pub(crate) fn build_default_toml() -> TomlConfig {
         },
         ascii_art: AsciiArt {
             size: AsciiSize::Big,
+            placement: ArtPlacement::Left,
         },
         client_features: ClientFeatures {
             experimental_features: false,
