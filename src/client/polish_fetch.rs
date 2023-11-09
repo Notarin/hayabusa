@@ -8,7 +8,10 @@ use crate::daemon::fetch_info::SystemInfo;
 pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let mut ascii_art: String = get_ascii_art(&system_info.distro);
-    parse_ascii_art(&mut ascii_art);
+    terminate_styling(&mut ascii_art);
+    terminate_styling(&mut fetch);
+    parse_internal_ansi_codes(&mut ascii_art);
+    parse_internal_ansi_codes(&mut fetch);
     normalize(&mut ascii_art);
     normalize(&mut fetch);
     // add ascii art
@@ -25,6 +28,18 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     reset_formatting_on_cr(&full_fetch)
 }
 
+fn terminate_styling(string: &mut String) {
+    let mut lines: Vec<String> = string.lines().map(
+        |s| {
+            s.to_string()
+        }
+    ).collect();
+    for line in lines.iter_mut() {
+        line.push_str("{{reset}}");
+    }
+    *string = lines.join("\n");
+}
+
 fn add_border(string: &str, border_chars: &BorderChars) -> String {
     let lines: Vec<&str> = string.lines().collect();
     let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes(s)).collect();
@@ -35,9 +50,9 @@ fn add_border(string: &str, border_chars: &BorderChars) -> String {
     ).max().unwrap_or(0);
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let mut ansi_color: String = config.border.ansi_color.clone();
-    parse_ascii_art(&mut ansi_color);
+    parse_internal_ansi_codes(&mut ansi_color);
     let mut color_reset: String = "{{reset}}".to_string();
-    parse_ascii_art(&mut color_reset);
+    parse_internal_ansi_codes(&mut color_reset);
 
     let top_horizontal_border = format!(
         "{}{}{}{}{}",
@@ -287,7 +302,7 @@ fn remove_ansi_escape_codes(s: &str) -> String {
     re.replace_all(s, "").to_string()
 }
 
-pub(crate) fn parse_ascii_art(ascii_art: &mut String) {
+pub(crate) fn parse_internal_ansi_codes(ascii_art: &mut String) {
     while let Some(start_index) = ascii_art.find("{{color") {
         if let Some(end_index) = ascii_art[start_index..].find("}}") {
             // Adjust for the relative offset

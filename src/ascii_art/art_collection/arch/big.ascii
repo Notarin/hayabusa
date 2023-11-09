@@ -1,19 +1,19 @@
-{{color12}}                  -`{{reset}}
-{{color12}}                 .o+`{{reset}}
-{{color12}}                `ooo/{{reset}}
-{{color12}}               `+oooo:{{reset}}
-{{color12}}              `+oooooo:{{reset}}
-{{color12}}              -+oooooo+:{{reset}}
-{{color12}}            `/:-:++oooo+:{{reset}}
-{{color12}}           `/++++/+++++++:{{reset}}
-{{color12}}          `/++++++++++++++:{{reset}}
-{{color12}}         `/+++o{{color4}}oooooooo{{color12}}oooo/`{{reset}}
-{{color4}}        {{color12}}./{{color4}}ooosssso++osssssso{{color12}}+`{{reset}}
-{{color4}}       .oossssso-````/ossssss+`{{reset}}
-{{color4}}      -osssssso.      :ssssssso.{{reset}}
-{{color4}}     :osssssss/        osssso+++.{{reset}}
-{{color4}}    /ossssssss/        +ssssooo/-{{reset}}
-{{color4}}  `/ossssso+/:-        -:/+osssso+-{{reset}}
-{{color4}} `+sso+:-`                 `.-/+oso:{{reset}}
-{{color4}}`++:.                           `-/+/{{reset}}
-{{color4}}.`                                 `/{{reset}}
+{{color12}}                  -`
+{{color12}}                 .o+`
+{{color12}}                `ooo/
+{{color12}}               `+oooo:
+{{color12}}              `+oooooo:
+{{color12}}              -+oooooo+:
+{{color12}}            `/:-:++oooo+:
+{{color12}}           `/++++/+++++++:
+{{color12}}          `/++++++++++++++:
+{{color12}}         `/+++o{{color4}}oooooooo{{color12}}oooo/`
+{{color4}}        {{color12}}./{{color4}}ooosssso++osssssso{{color12}}+`
+{{color4}}       .oossssso-````/ossssss+`
+{{color4}}      -osssssso.      :ssssssso.
+{{color4}}     :osssssss/        osssso+++.
+{{color4}}    /ossssssss/        +ssssooo/-
+{{color4}}  `/ossssso+/:-        -:/+osssso+-
+{{color4}} `+sso+:-`                 `.-/+oso:
+{{color4}}`++:.                           `-/+/
+{{color4}}.`                                 `/
