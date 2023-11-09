@@ -1,2 +1,2 @@
-{{color1}}█{{color2}}█
-{{color4}}█{{color3}}█
+{{color1}}█{{color2}}█{{reset}}
+{{color4}}█{{color3}}█{{reset}}
