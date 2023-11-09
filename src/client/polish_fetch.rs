@@ -28,7 +28,11 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
 fn add_border(string: &str, border_chars: &BorderChars) -> String {
     let lines: Vec<&str> = string.lines().collect();
     let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes(s)).collect();
-    let max_len: usize = ansi_free_lines.iter().map(|s| UnicodeWidthStr::width(s.as_str())).max().unwrap_or(0);
+    let max_len: usize = ansi_free_lines.iter().map(
+        |s| {
+            UnicodeWidthStr::width(s.as_str())
+        }
+    ).max().unwrap_or(0);
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let mut ansi_color: String = config.border.ansi_color.clone();
     parse_ascii_art(&mut ansi_color);
@@ -53,7 +57,10 @@ fn add_border(string: &str, border_chars: &BorderChars) -> String {
         &color_reset,
     );
 
-    let estimated_capacity = (max_len + ansi_color.len() + color_reset.len() + 10) * lines.len() + top_horizontal_border.len() + bottom_horizontal_border.len();
+    let estimated_capacity =
+        (max_len + ansi_color.len() + color_reset.len() + 10) * lines.len() +
+            top_horizontal_border.len() +
+            bottom_horizontal_border.len();
     let mut bordered_string = String::with_capacity(estimated_capacity);
 
     bordered_string.push_str(&top_horizontal_border);
@@ -182,7 +189,11 @@ fn add_ascii_art(ascii_art: &str, fetch: String) -> String {
 fn normalize(block: &mut String) {
     let block_lines: Vec<String> = block.lines().map(|s| s.to_string()).collect();
     let ansi_free_block: String = remove_ansi_escape_codes(block);
-    let ansi_free_block_lines: Vec<String> = ansi_free_block.lines().map(|s| s.to_string()).collect();
+    let ansi_free_block_lines: Vec<String> = ansi_free_block.lines().map(
+        |s| {
+            s.to_string()
+        }
+    ).collect();
 
     let target_width: usize = ansi_free_block_lines
         .iter()
