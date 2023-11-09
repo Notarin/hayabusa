@@ -69,7 +69,6 @@ pub(crate) enum AsciiSize {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct ClientFeatures {
     pub(crate) experimental_features: bool,
-    pub(crate) environment_variables: bool,
 }
 
 pub(crate) fn build_default_toml() -> TomlConfig {
@@ -107,7 +106,6 @@ pub(crate) fn build_default_toml() -> TomlConfig {
         },
         client_features: ClientFeatures {
             experimental_features: false,
-            environment_variables: true,
         },
     }
 }
