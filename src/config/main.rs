@@ -40,25 +40,37 @@ pub(crate) fn get_config_location() -> String {
 pub(crate) fn load_toml_config() -> TomlConfig {
     let toml_file_location: String = get_toml_config_location();
 
-    let file_contents: String = match fs::read_to_string(&toml_file_location) {
-        Ok(contents) => contents,
-        Err(_) => {
+    // Read the configuration file, if it fails, write the default toml.
+    let file_contents: String = fs::read_to_string(&toml_file_location)
+        .or_else(|_| {
             write_default_toml();
-            to_string(&build_default_toml()).unwrap()
+            to_string(&build_default_toml())
+        })
+        .expect("Failed to handle TOML config file.");
+
+    // Try to parse the read contents directly into the struct.
+    if let Ok(config) = from_str::<TomlConfig>(&file_contents) {
+        config
+    } else {
+        // If parsing fails, merge with default and retry.
+        let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents)
+            .expect("Failed to parse loaded config to BTreeMap.");
+        let default_config_map: BTreeMap<String, Value> = from_str(&to_string(&build_default_toml())
+            .expect("Failed to serialize default TOML."))
+            .expect("Failed to parse default config to BTreeMap.");
+
+        let was_merged: bool = merge_maps(&mut loaded_config, &default_config_map);
+        if was_merged {
+            let new_config_str: String = to_string(&loaded_config)
+                .expect("Failed to serialize merged config.");
+            fs::write(&toml_file_location, new_config_str)
+                .expect("Failed to update config.toml after merging.");
         }
-    };
 
-    let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents).unwrap();
-    let default_config_map: BTreeMap<String, Value> = from_str(&to_string(&build_default_toml()).unwrap()).unwrap();
-
-    let was_merged = merge_maps(&mut loaded_config, &default_config_map);
-
-    if was_merged {
-        let new_config_str: String = to_string(&loaded_config).unwrap();
-        fs::write(toml_file_location, new_config_str).expect("Failed to update config.toml");
+        from_str(&to_string(&loaded_config)
+            .expect("Failed to serialize merged config for final struct."))
+            .expect("Failed to parse final config to TomlConfig.")
     }
-
-    from_str(&to_string(&loaded_config).unwrap()).unwrap()
 }
 
 fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) -> bool {
