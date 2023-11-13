@@ -50,6 +50,16 @@ pub(crate) struct BorderChars {
 pub(crate) struct AsciiArt {
     pub(crate) size: AsciiSize,
     pub(crate) placement: ArtPlacement,
+    pub(crate) alignment: Alignment,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) enum Alignment {
+    Left,
+    Center,
+    Right,
+    Top,
+    Bottom,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -103,6 +113,7 @@ pub(crate) fn build_default_toml() -> TomlConfig {
         ascii_art: AsciiArt {
             size: AsciiSize::Big,
             placement: ArtPlacement::Left,
+            alignment: Alignment::Center,
         },
         client_features: ClientFeatures {
             experimental_features: false,

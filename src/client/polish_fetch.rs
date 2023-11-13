@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
 use crate::client::main::get_ascii_art;
-use crate::config::toml::{ArtPlacement, BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
+use crate::config::toml::{Alignment, ArtPlacement, BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
 use crate::daemon::fetch_info::SystemInfo;
 
 pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
@@ -14,6 +14,8 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     parse_internal_ansi_codes(&mut fetch);
     normalize(&mut ascii_art);
     normalize(&mut fetch);
+    // align ascii art and fetch
+    align(vec![&mut ascii_art, &mut fetch]);
     // add ascii art
     let mut full_fetch: String = add_ascii_art(&ascii_art, fetch);
     normalize(&mut full_fetch);
@@ -199,6 +201,116 @@ fn add_ascii_art(ascii_art: &str, fetch: String) -> String {
         }
     };
     result
+}
+
+fn align(mut blocks: Vec<&mut String>) {
+    let toml_config: &TomlConfig = &TOML_CONFIG_OBJECT;
+
+    for block in blocks.iter_mut() {
+        normalize(&mut *block);
+    }
+
+    let max_width: usize = blocks.iter()
+        .map(|block| remove_ansi_escape_codes(block).lines()
+            .map(
+                |line| UnicodeWidthStr::width(line)
+            ).max().unwrap_or(0))
+        .max()
+        .unwrap_or(0);
+    let max_height: usize = blocks.iter()
+        .map(|block| block.lines().count())
+        .max()
+        .unwrap_or(0);
+    let alignment: &Alignment = &toml_config.ascii_art.alignment;
+
+    match toml_config.ascii_art.placement {
+        ArtPlacement::Top | ArtPlacement::Bottom => {
+            for block in blocks {
+
+                let block_width = remove_ansi_escape_codes(block).lines().map(
+                    |line| UnicodeWidthStr::width(line)
+                ).max().unwrap_or(0);
+
+                let difference: usize = max_width - block_width;
+
+                match alignment {
+                    Alignment::Left => {
+                        *block = format!("{}{}", block, " ".repeat(difference));
+                        normalize(&mut *block);
+                    }
+                    Alignment::Right => {
+                        println!("max_width: {}", max_width);
+                        println!("block_width: {}", block_width);
+                        let lines: Vec<String> = block.lines().map(String::from).collect();
+                        let padded_lines: Vec<String> = lines.iter().map(|line| {
+                            format!("{}{}", " ".repeat(difference), line)
+                        }).collect();
+                        *block = padded_lines.join("\n");
+                    }
+                    _ => {
+                        let left_difference: usize = difference / 2;
+                        let right_difference: usize = difference - left_difference;
+                        let lines: Vec<String> = block.lines().map(String::from).collect();
+                        let padded_lines: Vec<String> = lines.iter().map(|line| {
+                            format!("{}{}{}",
+                                    " ".repeat(left_difference),
+                                    line,
+                                    " ".repeat(right_difference))
+                        }).collect();
+                        *block = padded_lines.join("\n");
+                    }
+                }
+            }
+        }
+        ArtPlacement::Left | ArtPlacement::Right => {
+            for block in blocks {
+                let mut lines: Vec<String> = block.lines().map(String::from).collect();
+
+                match alignment {
+                    Alignment::Top => {
+                        for line in lines.iter_mut() {
+                            let current_width: usize = UnicodeWidthStr::width(line.as_str());
+                            if current_width < max_width {
+                                line.push_str(&" ");
+                            }
+                        }
+                    }
+                    Alignment::Bottom => {
+                        let num_lines: usize = lines.len();
+                        if num_lines < max_height {
+                            let empty_lines_to_add: usize = max_height - num_lines;
+
+                            let empty_lines: Vec<String> =
+                                vec![" ".repeat(max_width); empty_lines_to_add]
+                                .into_iter()
+                                .map(|s| s.to_string())
+                                .collect::<Vec<String>>();
+
+                            lines.splice(0..0, empty_lines.into_iter());
+                        }
+                    }
+                    _ => {
+                        let num_lines = lines.len();
+                        if num_lines < max_height {
+                            let total_spaces_to_add = max_height - num_lines;
+                            let spaces_above = total_spaces_to_add / 2;
+                            let spaces_below = total_spaces_to_add - spaces_above;
+
+                            for _ in 0..spaces_above {
+                                lines.insert(0, String::from(" "));
+                            }
+                            for _ in 0..spaces_below {
+                                lines.push(String::from(" "));
+                            }
+                        }
+                    }
+                }
+
+                *block = lines.join("\n");
+                normalize(&mut *block);
+            }
+        }
+    }
 }
 
 fn normalize(block: &mut String) {
