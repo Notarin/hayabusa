@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-
 mod daemon;
 mod ascii_art;
 mod client;
