@@ -31,6 +31,9 @@ pub(crate) fn main() {
 
 pub(crate) fn get_ascii_art(distro: &String) -> String {
     let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
+    if !config.ascii_art.ascii_art_file.is_empty() {
+        return get_ascii_file(config.ascii_art.ascii_art_file);
+    }
     let art_distro = match distro.as_str() {
         "Arch Linux" => ascii_art::main::ALL_ART.arch,
         "Windows" => ascii_art::main::ALL_ART.windows,
@@ -40,4 +43,11 @@ pub(crate) fn get_ascii_art(distro: &String) -> String {
         AsciiSize::Big => art_distro.big,
         AsciiSize::Small => art_distro.small,
     }.to_string()
+}
+
+fn get_ascii_file(location: String) -> String {
+    let mut file: String = String::new();
+    let mut file_handle: std::fs::File = std::fs::File::open(location).expect("Failed to open file");
+    file_handle.read_to_string(&mut file).expect("Failed to read file");
+    file
 }
