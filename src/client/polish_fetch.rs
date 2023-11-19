@@ -220,13 +220,13 @@ fn align(mut blocks: Vec<&mut String>) {
     let toml_config: &TomlConfig = &TOML_CONFIG_OBJECT;
 
     for block in blocks.iter_mut() {
-        normalize(&mut *block);
+        normalize(block);
     }
 
     let max_width: usize = blocks.iter()
         .map(|block| remove_ansi_escape_codes(block).lines()
             .map(
-                |line| UnicodeWidthStr::width(line)
+                UnicodeWidthStr::width
             ).max().unwrap_or(0))
         .max()
         .unwrap_or(0);
@@ -282,7 +282,7 @@ fn align(mut blocks: Vec<&mut String>) {
                         for line in lines.iter_mut() {
                             let current_width: usize = UnicodeWidthStr::width(line.as_str());
                             if current_width < max_width {
-                                line.push_str(&" ");
+                                line.push(' ');
                             }
                         }
                     }

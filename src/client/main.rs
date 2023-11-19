@@ -29,12 +29,12 @@ pub(crate) fn main() {
     print!("{}", fetch);
 }
 
-pub(crate) fn get_ascii_art(distro: &String) -> String {
+pub(crate) fn get_ascii_art(distro: &str) -> String {
     let config: TomlConfig = TOML_CONFIG_OBJECT.clone();
     if !config.ascii_art.ascii_art_file.is_empty() {
         return get_ascii_file(config.ascii_art.ascii_art_file);
     }
-    let art_distro = match distro.as_str() {
+    let art_distro = match distro {
         "Arch Linux" => ascii_art::main::ALL_ART.arch,
         "Windows" => ascii_art::main::ALL_ART.windows,
         _ => ascii_art::main::ALL_ART.fallback,
