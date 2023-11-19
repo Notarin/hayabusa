@@ -3,8 +3,6 @@ use std::io::Cursor;
 
 use base64::{engine::general_purpose, Engine as _};
 use image::DynamicImage;
-use nix::{ioctl_read, libc};
-use nix::libc::ioctl;
 
 use crate::config::toml::TOML_CONFIG_OBJECT;
 
@@ -134,6 +132,7 @@ fn scale_and_center_image(image: Vec<u8>) -> Result<Vec<u8>, String> {
 }
 
 #[derive(Debug)]
+#[cfg(target_os = "linux")]
 struct TerminalSize {
     width: u16,
     height: u16,
@@ -141,10 +140,21 @@ struct TerminalSize {
     cell_height: u16,
 }
 
-ioctl_read!(get_winsize, libc::TIOCGWINSZ, 0, libc::winsize);
+#[derive(Debug)]
+#[cfg(target_os = "windows")]
+struct TerminalSize {
+    cell_width: u16,
+    cell_height: u16,
+}
+
 
 #[cfg(target_os = "linux")]
 fn get_cell_size() -> Result<TerminalSize, String> {
+    use nix::{ioctl_read, libc};
+    use nix::libc::ioctl;
+
+    ioctl_read!(get_winsize, libc::TIOCGWINSZ, 0, libc::winsize);
+
     let mut terminal_size = TerminalSize {
         width: 0,
         height: 0,
@@ -177,4 +187,9 @@ fn get_cell_size() -> Result<TerminalSize, String> {
     }
 
     Ok(terminal_size)
+}
+
+#[cfg(target_os = "windows")]
+fn get_cell_size() -> Result<TerminalSize, String> {
+    Err("Windows does not support the proper protocols".to_string())
 }
