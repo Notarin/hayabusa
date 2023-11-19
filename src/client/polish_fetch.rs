@@ -5,9 +5,19 @@ use crate::client::main::get_ascii_art;
 use crate::config::toml::{Alignment, ArtPlacement, BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
 use crate::daemon::fetch_info::SystemInfo;
 
+use super::kitty_backend::get_kitty_image;
+
 pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
-    let mut ascii_art: String = get_ascii_art(&system_info.distro);
+    let mut ascii_art: String;
+    match config.ascii_art.backend.engine {
+        crate::config::toml::Engine::Ascii => {
+            ascii_art = get_ascii_art(&system_info.distro);
+        }
+        crate::config::toml::Engine::Kitty => {
+            ascii_art = get_kitty_image().unwrap_or(get_ascii_art(&system_info.distro));
+        }
+    }
     terminate_styling(&mut ascii_art);
     terminate_styling(&mut fetch);
     parse_internal_ansi_codes(&mut ascii_art);
@@ -406,7 +416,7 @@ fn vertically_normalize(blocks: Vec<&str>) -> Vec<String> {
 }
 
 lazy_static!(
-    static ref ANSI_ESCAPE_CODE_REGEX: Regex = Regex::new(r"\x1B\[[0-?]*[- /]*[@-~]").unwrap();
+    static ref ANSI_ESCAPE_CODE_REGEX: Regex = Regex::new(r"\x1B(?:\[[0-?]*[- /]*[@-~]|_[^\\]*;[^\\]*\\)").unwrap();
 );
 
 fn remove_ansi_escape_codes(s: &str) -> String {

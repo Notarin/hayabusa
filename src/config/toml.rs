@@ -51,6 +51,21 @@ pub(crate) struct AsciiArt {
     pub(crate) size: AsciiSize,
     pub(crate) placement: ArtPlacement,
     pub(crate) alignment: Alignment,
+    pub(crate) backend: AsciiArtBackend,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) struct AsciiArtBackend {
+    pub(crate) engine: Engine,
+    pub(crate) image_path: String,
+    pub(crate) image_width: u16,
+    /* TODO: add specifying ascii art to file */
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub(crate) enum Engine {
+    Ascii,
+    Kitty,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -114,6 +129,11 @@ pub(crate) fn build_default_toml() -> TomlConfig {
             size: AsciiSize::Big,
             placement: ArtPlacement::Left,
             alignment: Alignment::Center,
+            backend: AsciiArtBackend {
+                engine: Engine::Ascii,
+                image_path: String::from(""),
+                image_width: 50,
+            },
         },
         client_features: ClientFeatures {
             experimental_features: false,
