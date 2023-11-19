@@ -238,7 +238,7 @@ fn align(mut blocks: Vec<&mut String>) {
             for block in blocks {
 
                 let block_width = remove_ansi_escape_codes(block).lines().map(
-                    |line| UnicodeWidthStr::width(line)
+                    UnicodeWidthStr::width
                 ).max().unwrap_or(0);
 
                 let difference: usize = max_width - block_width;
@@ -249,8 +249,6 @@ fn align(mut blocks: Vec<&mut String>) {
                         normalize(&mut *block);
                     }
                     Alignment::Right => {
-                        println!("max_width: {}", max_width);
-                        println!("block_width: {}", block_width);
                         let lines: Vec<String> = block.lines().map(String::from).collect();
                         let padded_lines: Vec<String> = lines.iter().map(|line| {
                             format!("{}{}", " ".repeat(difference), line)
