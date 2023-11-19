@@ -17,6 +17,9 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
         crate::config::toml::Engine::Kitty => {
             ascii_art = get_kitty_image().unwrap_or(get_ascii_art(&system_info.distro));
         }
+        crate::config::toml::Engine::None => {
+            ascii_art = String::new();
+        }
     }
     terminate_styling(&mut ascii_art);
     terminate_styling(&mut fetch);

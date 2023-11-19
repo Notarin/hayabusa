@@ -65,6 +65,7 @@ pub(crate) struct AsciiArtBackend {
 pub(crate) enum Engine {
     Ascii,
     Kitty,
+    None,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
