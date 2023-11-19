@@ -81,7 +81,12 @@ fn get_target_rows(width: u16, height: u16) -> Result<u16, String> {
 
 fn preload_image_resolution() -> Result<(u16, u16), String> {
     let config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
-    let image: Vec<u8> = fs::read(&config.ascii_art.backend.image_path).expect("Failed to read image file");
+    let mut path: String = config.ascii_art.backend.image_path.clone();
+    if path.starts_with('~') {
+        let home_dir: String = env!("HOME").to_string();
+        path = path.replace('~', &home_dir);
+    }
+    let image: Vec<u8> = fs::read(path).expect("Failed to read image file");
     let image: DynamicImage = image::load_from_memory(&image).expect("Failed to load image");
     let image_width: u32 = image.width();
     let image_height: u32 = image.height();
