@@ -24,8 +24,8 @@ hayabusa has image support, it can display any png file as long as the
 terminal supports it.
 
 ## Installation
-### Source:
-- Clone the repository
+### From source:
+- Clone the repository: `git clone https://github.com/Notarin/ && cd hayabusa`
 - Inside the repository, run `cargo build --release`
 - The finished binary should be `./target/release/hayabusa`
 
