@@ -43,4 +43,4 @@ Options:
 ```
 
 ## Configuration
-Check out our [wiki](https://github.com/Notarin/hayabusa/wiki/Configuration)!
+Check out our [wiki](https://github.com/Notarin/hayabusa/blob/main/CONFIGURATION.md)!
