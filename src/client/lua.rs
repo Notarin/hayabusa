@@ -12,7 +12,7 @@ pub(crate) fn execute_lua(system_info: SystemInfo) -> String {
 
     lua.context(|lua_ctx| {
         let globals: Table = lua_ctx.globals();
-        let simple_table = system_info_table(system_info, lua_ctx);
+        let simple_table: Table = system_info_table(system_info, lua_ctx);
         globals.set("system_info", simple_table).unwrap();
         globals.set("environmental_variables", environmental_variable_table(lua_ctx)).unwrap();
 

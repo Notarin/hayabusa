@@ -10,23 +10,32 @@ pub(crate) fn get_kitty_image() -> Result<String, String> {
     let toml_config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
     let escape_character: char = '\x1B';
     let mut control_data: String = String::new();
-    let payload: Vec<u8> = get_image()?;
+    let image_payload: Vec<u8> = get_image()?;
 
+    // I realized that I'd need the image resolution this early
+    // and I was way too deep in to go back, so I'm just preloading it, bite me
     let (image_width, image_height): (u16, u16) = preload_image_resolution()?;
     let target_rows: u16 = get_target_rows(image_width, image_height)?;
-    control_data.push_str("f=100,");
-    control_data.push_str("a=T,");
-    control_data.push_str("z=1,");
+
+    let will_be_png_data: &str = "f=100,";
+    let actually_display_the_image_please: &str = "a=T,";
+    let display_over_text: &str = "z=1,";
     let binding: String = toml_config.ascii_art.backend.image_width.to_string();
     let columns: &str = binding.as_str();
-    control_data.push_str(&("c=".to_string() + columns + ","));
-    control_data.push_str(&("r=".to_string() + &target_rows.to_string() + ","));
-    control_data.push_str("C=1,");
+    let amount_of_columns_for_the_image_to_span: &String = &("c=".to_string() + columns + ",");
+    let amount_of_rows_for_the_image_to_span: &String = &("r=".to_string() + &target_rows.to_string() + ",");
+    let reset_cursor_position_after_printing: &str = "C=1,";
+    control_data.push_str(will_be_png_data);
+    control_data.push_str(actually_display_the_image_please);
+    control_data.push_str(display_over_text);
+    control_data.push_str(amount_of_columns_for_the_image_to_span);
+    control_data.push_str(amount_of_rows_for_the_image_to_span);
+    control_data.push_str(reset_cursor_position_after_printing);
 
-    let base_64_payload: String = general_purpose::STANDARD.encode(payload);
+    let base_64_payload: String = general_purpose::STANDARD.encode(image_payload);
     let chunked_payload: Vec<String> = chunk_data(base_64_payload, 4096);
-    let mut chunked_image: Vec<String> = Vec::new();
 
+    let mut chunked_image: Vec<String> = Vec::new();
     for (i, chunk) in chunked_payload.iter().enumerate() {
         // Check if it's the last chunk
         let m_value: &str = if i == chunked_payload.len() - 1 { "0" } else { "1" };
@@ -36,13 +45,15 @@ pub(crate) fn get_kitty_image() -> Result<String, String> {
             &control_data
         };
 
-        let image_string = format!(
+        let image_string: String = format!(
             "{}_G{}m={};{}{}\\",
             escape_character, current_control_data, m_value, chunk, escape_character
         );
         chunked_image.push(image_string);
     }
 
+    // In order to properly place the image, I'm literally just going to build a matrix of spaces
+    // it works
     let result: String = chunked_image.join("") +
         build_space_matrix(toml_config.ascii_art.backend.image_width, target_rows).as_str();
     Ok(result)
@@ -69,6 +80,7 @@ fn chunk_data(data: String, chunk_size: usize) -> Vec<String> {
 }
 
 fn get_target_rows(width: u16, height: u16) -> Result<u16, String> {
+    // Hope you payed attention in math class
     let config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
     let target_columns: u16 = config.ascii_art.backend.image_width;
     let terminal_size: TerminalSize = get_cell_size()?;
@@ -80,6 +92,7 @@ fn get_target_rows(width: u16, height: u16) -> Result<u16, String> {
 }
 
 fn preload_image_resolution() -> Result<(u16, u16), String> {
+    // Yes, I know, duplicate code, but I'm not going to refactor this right now
     let config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
     let mut path: String = config.ascii_art.backend.image_path.clone();
     if path.starts_with('~') {
@@ -95,41 +108,42 @@ fn preload_image_resolution() -> Result<(u16, u16), String> {
 
 fn get_image() -> Result<Vec<u8>, String> {
     let config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
-    let mut image: Vec<u8> = fs::read(&config.ascii_art.backend.image_path).expect("Failed to read image file");
+    let mut path: String = config.ascii_art.backend.image_path.clone();
+    if path.starts_with('~') {
+        let home_dir: String = env!("HOME").to_string();
+        path = path.replace('~', &home_dir);
+    }
+    let mut image: Vec<u8> = fs::read(path).expect("Failed to read image file");
     image = scale_and_center_image(image)?;
     Ok(image)
 }
 
 fn scale_and_center_image(image: Vec<u8>) -> Result<Vec<u8>, String> {
     let image: DynamicImage = image::load_from_memory(&image).expect("Failed to load image");
-    //get image size requirements
-    //start by getting cell size
+
     let terminal_size: TerminalSize = get_cell_size()?;
     let target_cell_width: &u16 = &TOML_CONFIG_OBJECT.ascii_art.backend.image_width;
-    //next figure the current image resolution
+
     let image_width: u32 = image.width();
     let image_height: u32 = image.height();
     let target_width: u32 = (*target_cell_width * terminal_size.cell_width) as u32;
     let target_height: u32 = (target_width as f32 / image_width as f32 * image_height as f32) as u32;
-    //scale image
+
     let scaled_image: DynamicImage =
         image.resize_exact(
             target_width,
             target_height,
             image::imageops::FilterType::Nearest
         );
-    //divide the target height by the cell height to get the number of rows
-    //then round up to the nearest whole number
-    //then multiply by the cell height
-    //thats our canvas height
-    //make our canvas, then center the image on the canvas
+
+    // Placing the image on a canvas so its centered, yes, its just a few pixels, but it looks better
     let canvas_height: u32 = (target_height as f32 / terminal_size.cell_height as f32).ceil() as u32 * terminal_size.cell_height as u32;
     let canvas_width: u32 = target_width;
     let mut canvas: DynamicImage = DynamicImage::new_rgba8(canvas_width, canvas_height);
     let canvas_x: u32 = (canvas_width - target_width) / 2;
     let canvas_y: u32 = (canvas_height - target_height) / 2;
     image::imageops::overlay(&mut canvas, &scaled_image, canvas_x as i64, canvas_y as i64);
-    //convert the canvas to a vec of u8
+
     let mut canvas_bytes: Cursor<Vec<u8>> = Cursor::new(Vec::new());
     canvas.write_to(&mut canvas_bytes, image::ImageOutputFormat::Png).expect("Failed to write canvas to vec");
 
@@ -174,6 +188,11 @@ fn get_cell_size() -> Result<TerminalSize, String> {
         ws_ypixel: 0,
     };
 
+    // unsafe code? literal bruh moment
+    // If someone can figure out how to do this without unsafe code, please do
+    // 1: Don't create dependencies
+    // 2: Don't use STDIN/STDOUT garbage
+    // 3: Don't break support for terminals that already work
     unsafe {
         if ioctl(0, libc::TIOCGWINSZ, &mut winsize) == -1 {
             return Err("Failed to get terminal size".to_string());
@@ -196,5 +215,9 @@ fn get_cell_size() -> Result<TerminalSize, String> {
 
 #[cfg(target_os = "windows")]
 fn get_cell_size() -> Result<TerminalSize, String> {
+    // Hey, heads up, don't fix this for windows
+    // Proper compatibilty check is not yet made
+    // and if you fix this it'll start spewing escape code garbage into the windows terminal.
+    // Also, windows terminals do not support the proper protocols, so it's not even worth it.
     Err("Windows does not support the proper protocols".to_string())
 }

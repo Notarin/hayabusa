@@ -10,6 +10,8 @@ pub(crate) fn main() {
     let socket_path: String = SOCKET_PATH.clone();
     let mut client: LocalSocketStream = LocalSocketStream::connect(socket_path.clone())
         .unwrap_or_else(|_| {
+            // I should really set up some automatic way to set up the system service
+            // either that or I'll defer it to pre-runtime
             eprintln!(
                 "Failed to connect to the {} socket, have you started the system service?",
                 socket_path.clone()
@@ -22,6 +24,7 @@ pub(crate) fn main() {
     let string: Cow<str> = String::from_utf8_lossy(&buffer);
     let system_info: SystemInfo = serde_yaml::from_str(&string)
         .expect("Failed to deserialize system info");
+
     let result: String = lua::execute_lua(system_info.clone());
 
     let fetch: String = polish_fetch::main(&system_info, result);

@@ -11,6 +11,7 @@ lazy_static!(
 );
 
 pub(crate) async fn main() {
+    println!("Running as daemon");
     initialize_system_info().await;
 
     let socket_path: String = SOCKET_PATH.clone();

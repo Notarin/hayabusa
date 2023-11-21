@@ -5,7 +5,6 @@ mod config;
 
 use clap::Parser;
 use lazy_static::lazy_static;
-use crate::client::main;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -29,12 +28,10 @@ lazy_static!(
 async fn main() {
     let start: std::time::Instant = std::time::Instant::now();
     let args: Args = Args::parse();
-    //daemon mode is the system service that tracks system info
-    if args.daemon {
-        println!("Running as daemon");
-        daemon::main::main().await;
-    } else {
-        main::main();
+    match args.daemon {
+        true => daemon::main::main().await,
+        //man, I don't remember why one is async and one isn't, but I'll figure that out another time
+        false => client::main::main(),
     }
     if args.benchmark {
         println!("Execution time: {:?}", start.elapsed());

@@ -8,6 +8,7 @@ use crate::daemon::fetch_info::SystemInfo;
 use super::kitty_backend::get_kitty_image;
 
 pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
+    // oh boy, there is a lot of string manipulation here, I'm sorry to anyone who has to read this
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let mut ascii_art: String;
     match config.ascii_art.backend.engine {
@@ -25,6 +26,7 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     terminate_styling(&mut fetch);
     parse_internal_ansi_codes(&mut ascii_art);
     parse_internal_ansi_codes(&mut fetch);
+    // fuck it, normalize() spam
     normalize(&mut ascii_art);
     normalize(&mut fetch);
     // align ascii art and fetch
