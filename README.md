@@ -25,7 +25,7 @@ terminal supports it.
 
 ## Installation
 ### From source:
-- Clone the repository: `git clone https://github.com/Notarin/ && cd hayabusa`
+- Clone the repository: `git clone https://github.com/Notarin/hayabusa && cd hayabusa`
 - Inside the repository, run `cargo build --release`
 - The finished binary should be `./target/release/hayabusa`
 
