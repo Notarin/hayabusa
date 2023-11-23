@@ -1,4 +1,6 @@
+use std::fs::Permissions;
 use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
 use std::sync::{Mutex, MutexGuard};
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use lazy_static::lazy_static;
@@ -26,6 +28,13 @@ pub(crate) async fn main() {
     // The listener is the IPC server that listens for connections from the fetch client
     let listener: LocalSocketListener = LocalSocketListener::bind(socket_path.clone())
         .expect("Failed to bind to socket");
+
+    // If other users don't have read and write permissions, then the fetch client won't be able
+    // to connect to the socket
+    let permissions = Permissions::from_mode(0o666); // Read and write for everyone
+    std::fs::set_permissions(&socket_path, permissions)
+        .expect("Failed to set permissions");
+
     println!("Listening on {}", socket_path);
 
     // Here is the infinite loop that listens for connections from the fetch client
