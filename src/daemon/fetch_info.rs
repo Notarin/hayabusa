@@ -5,7 +5,7 @@ use sysinfo::{CpuExt, DiskExt, System, SystemExt};
 use local_ip_address::local_ip;
 use gfx_hal::adapter::Adapter;
 use gfx_backend_vulkan::Backend;
-use gfx_hal::Instance;
+use gfx_hal::{Instance, UnsupportedBackend};
 use lazy_static::lazy_static;
 use tokio::task::JoinHandle;
 use serde::{Deserialize, Serialize};
@@ -212,8 +212,12 @@ pub(crate) async fn get_kernel() -> String {
 
 pub(crate) async fn get_gpus() -> Vec<String> {
 
-    let instance: gfx_backend_vulkan::Instance =
-        Instance::create("hayabusa", 1).expect("Failed to create Vulkan instance");
+    let instance: Result<gfx_backend_vulkan::Instance, UnsupportedBackend> =
+        Instance::create("hayabusa", 1);
+    if instance.is_err() {
+        return vec![];
+    }
+    let instance: gfx_backend_vulkan::Instance = instance.unwrap();
     let adapters: Vec<Adapter<Backend>> = instance.enumerate_adapters();
 
     let mut names: Vec<String> = Vec::new();
