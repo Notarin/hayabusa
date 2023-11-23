@@ -25,9 +25,11 @@ terminal supports it.
 
 ## Installation
 ### From source:
-- Clone the repository: `git clone https://github.com/Notarin/hayabusa && cd hayabusa`
-- Inside the repository, run `cargo build --release`
-- The finished binary should be `./target/release/hayabusa`
+- Clone the repository: `git clone https://github.com/Notarin/ && cd hayabusa`
+- Inside the repository, run `make build` to build the binary
+- Run `sudo make install` to install
+
+Finished! You can now run `hayabusa` to run the program.
 
 ## Usage
 You will need to have the daemon running in the background before making a

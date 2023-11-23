@@ -1,0 +1,13 @@
+[Unit]
+Description=The hayabusa daemon
+After=network.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+Type=simple
+ExecStart=/usr/local/bin/hayabusa -d
+Environment=
+
+[Install]
+WantedBy=multi-user.target

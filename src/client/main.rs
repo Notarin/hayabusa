@@ -12,8 +12,9 @@ pub(crate) fn main() {
         .unwrap_or_else(|_| {
             // I should really set up some automatic way to set up the system service
             // either that or I'll defer it to pre-runtime
+            // update: I'm deferring it to pre-runtime, a makefile
             eprintln!(
-                "Failed to connect to the {} socket, have you started the system service?",
+                "Failed to connect to the {} socket, is the system service running?",
                 socket_path.clone()
             );
             std::process::exit(1);
