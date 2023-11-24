@@ -64,11 +64,12 @@ fn system_info_table(
     table
 }
 
-fn packages_table(packages: Packages, lua_ctx: Context) -> Table {
+fn packages_table(Packages { pacman, winget, dnf, apt }: Packages, lua_ctx: Context) -> Table {
     let packages_table: Table = lua_ctx.create_table().unwrap();
-    packages_table.set("pacman", packages.pacman).unwrap();
-    packages_table.set("winget", packages.winget).unwrap();
-    packages_table.set("dnf", packages.dnf).unwrap();
+    packages_table.set("pacman", pacman).unwrap();
+    packages_table.set("winget", winget).unwrap();
+    packages_table.set("dnf", dnf).unwrap();
+    packages_table.set("apt", apt).unwrap();
     packages_table
 }
 

@@ -9,6 +9,7 @@ pub(crate) struct Packages {
     pub(crate) pacman: u64,
     pub(crate) winget: u64,
     pub(crate) dnf: u64,
+    pub(crate) apt: u64,
 }
 
 pub(crate) async fn get_package_count() -> Packages {
@@ -19,11 +20,13 @@ pub(crate) async fn get_package_count() -> Packages {
     let pacman: u64 = pacman.await.unwrap_or(0);
     let winget: u64 = winget.await.unwrap_or(0);
     let dnf: u64 = dnf.await.unwrap_or(0);
+    let apt: u64 = get_apt_package_count().await.unwrap_or(0);
 
     let packages = Packages {
         pacman,
         winget,
         dnf,
+        apt,
     };
 
     {
@@ -45,6 +48,20 @@ pub(crate) async fn get_winget_package_count() -> Result<u64, String> {
 
     let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
     let count: u64 = stdout.lines().count() as u64;
+
+    Ok(count)
+}
+
+pub(crate) async fn get_apt_package_count() -> Result<u64, String> {
+    let output: Output = Command::new("apt")
+        .arg("list")
+        .arg("--installed")
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
+    let mut count: u64 = stdout.lines().count() as u64;
+    count -= 1; // remove the first line, its a metadata line
 
     Ok(count)
 }
