@@ -1,11 +1,11 @@
-{{color9}}        ..;,; .,;,.
-{{color9}}    .,lool: .ooooo,
-{{color9}}   ;oo;:    .coool.
-{{color9}} ....         ''' ,l;
-{{color9}}:oooo,            'oo.
-{{color9}}looooc            :oo'
-{{color9}} '::'             ,oo:
-{{color9}}   ,.,       .... co,
-{{color9}}    lo:;.   :oooo; .
-{{color9}}     ':ooo; cooooc
-{{color9}}        '''  ''''
+{{color9}}        ..;,; {{color11}}.,;,.
+{{color9}}    .,lool: {{color11}}.ooooo,
+{{color9}}   ;oo;:    {{color11}}.coool.
+{{color11}} ....         {{color11}}'''{{color9}} ,l;
+{{color11}}:oooo,           {{color9}} 'oo.
+{{color11}}looooc           {{color9}} :oo'
+{{color11}} '::'            {{color9}} ,oo:
+{{color9}}   ,.,     {{color11}}  .... {{color9}}co,
+{{color9}}    lo:;.  {{color11}} :oooo;{{color9}} .
+{{color9}}     ':ooo;{{color11}} cooooc{{color9}} 
+{{color9}}        '''{{color11}}  '''' {{color9}} 
