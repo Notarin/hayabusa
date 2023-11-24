@@ -30,7 +30,7 @@ pub(crate) fn main() {
 
     let fetch: String = polish_fetch::main(&system_info, result);
 
-    print!("{}", fetch);
+    println!("{}", fetch);
 }
 
 pub(crate) fn get_ascii_art(distro: &str) -> String {

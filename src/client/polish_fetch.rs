@@ -143,12 +143,16 @@ fn calculate_padding(string: &str, padding: u8) -> String {
 
 fn add_upper_padding(string: &mut String, padding: u8) {
     let upper_padding: String = calculate_padding(string, padding);
-    *string = format!("{}\n{}", upper_padding, string);
+    if !upper_padding.is_empty() {
+        *string = format!("{}\n{}", upper_padding, string);
+    }
 }
 
 fn add_lower_padding(string: &mut String, padding: u8) {
     let lower_padding: String = calculate_padding(string, padding);
-    *string = format!("{}\n{}", string, lower_padding);
+    if !lower_padding.is_empty() {
+        *string = format!("{}\n{}", string, lower_padding);
+    }
 }
 
 fn add_left_padding(string: &mut String, padding: u8) {
