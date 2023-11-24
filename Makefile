@@ -10,7 +10,9 @@ build:
 
 install:
 	@echo "Installing binary and service..."
+	@rm -f $(INSTALL_PATH)/$(BINARY_NAME)
 	@cp target/release/$(BINARY_NAME) $(INSTALL_PATH)/$(BINARY_NAME)
+	@rm -f $(SYSTEMD_PATH)/$(BINARY_NAME).service
 	@cp $(SERVICE_FILE) $(SYSTEMD_PATH)/$(BINARY_NAME).service
 	@systemctl enable $(BINARY_NAME).service
-	@systemctl start $(BINARY_NAME).service
+	@systemctl restart $(BINARY_NAME).service
