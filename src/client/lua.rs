@@ -75,6 +75,7 @@ fn packages_table(
         winget,
         dnf,
         apt,
+        brew,
     }: Packages,
     lua_ctx: Context,
 ) -> Table {
@@ -83,6 +84,7 @@ fn packages_table(
     packages_table.set("winget", winget).unwrap();
     packages_table.set("dnf", dnf).unwrap();
     packages_table.set("apt", apt).unwrap();
+    packages_table.set("homebrew", brew).unwrap();
     packages_table
 }
 

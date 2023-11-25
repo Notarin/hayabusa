@@ -18,7 +18,7 @@ pub(crate) async fn main() {
 
     let socket_path: String = SOCKET_PATH.clone();
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     if std::path::Path::new(&socket_path).exists() {
         std::fs::remove_file(&socket_path).expect("Failed to remove socket");
     }
