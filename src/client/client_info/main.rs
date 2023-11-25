@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use rlua::{Context, Table};
+use std::collections::HashMap;
 
 pub(crate) fn get_environmental_variables() -> HashMap<String, String> {
     let mut env_vars: HashMap<String, String> = HashMap::new();

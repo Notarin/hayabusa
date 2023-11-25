@@ -1,8 +1,8 @@
-use std::process::{Command, Output};
-use std::sync::MutexGuard;
-use serde::{Deserialize, Serialize};
 use crate::daemon::fetch_info::SystemInfo;
 use crate::daemon::main::SYSTEM_INFO_MUTEX;
+use serde::{Deserialize, Serialize};
+use std::process::{Command, Output};
+use std::sync::MutexGuard;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub(crate) struct Packages {
@@ -30,7 +30,8 @@ pub(crate) async fn get_package_count() -> Packages {
     };
 
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {

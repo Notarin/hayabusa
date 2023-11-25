@@ -1,17 +1,17 @@
-use std::sync::{Mutex, MutexGuard};
-use reqwest::Client;
-use std::time::Duration;
-use sysinfo::{CpuExt, DiskExt, System, SystemExt};
-use local_ip_address::local_ip;
-use gfx_hal::adapter::Adapter;
-use gfx_backend_vulkan::Backend;
-use gfx_hal::{Instance, UnsupportedBackend};
-use lazy_static::lazy_static;
-use tokio::task::JoinHandle;
-use serde::{Deserialize, Serialize};
-use tokio::spawn;
 use crate::daemon::main::SYSTEM_INFO_MUTEX;
 use crate::daemon::package_managers::{get_package_count, Packages};
+use gfx_backend_vulkan::Backend;
+use gfx_hal::adapter::Adapter;
+use gfx_hal::{Instance, UnsupportedBackend};
+use lazy_static::lazy_static;
+use local_ip_address::local_ip;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::sync::{Mutex, MutexGuard};
+use std::time::Duration;
+use sysinfo::{CpuExt, DiskExt, System, SystemExt};
+use tokio::spawn;
+use tokio::task::JoinHandle;
 
 lazy_static! {
     pub(crate) static ref SYS: Mutex<System> = Mutex::new(System::new_all());
@@ -67,16 +67,28 @@ pub(crate) async fn fetch_all() -> SystemInfo {
 
     let cpu: String = cpu_future.await.expect("get_cpu_name thread panicked!");
     let distro: String = distro_future.await.expect("get_distro thread panicked!");
-    let motherboard: String = motherboard_future.await.expect("get_motherboard thread panicked!");
+    let motherboard: String = motherboard_future
+        .await
+        .expect("get_motherboard thread panicked!");
     let kernel: String = kernel_future.await.expect("get_kernel thread panicked!");
     let gpus: Vec<String> = gpus_future.await.expect("get_gpus thread panicked!");
     let memory: Memory = memory_future.await.expect("get_memory thread panicked!");
     let disks: Vec<Disk> = disks_future.await.expect("get_disks thread panicked!");
-    let local_ip: String = local_ip_future.await.expect("get_local_ip_address thread panicked!");
-    let public_ip: String = public_ip_future.await.expect("get_public_ip_address thread panicked!");
-    let hostname: String = hostname_future.await.expect("get_hostname thread panicked!");
-    let boot_time: u64 = boot_time_future.await.expect("get_boot_time thread panicked!");
-    let packages: Packages = packages_future.await.expect("get_package_count thread panicked!");
+    let local_ip: String = local_ip_future
+        .await
+        .expect("get_local_ip_address thread panicked!");
+    let public_ip: String = public_ip_future
+        .await
+        .expect("get_public_ip_address thread panicked!");
+    let hostname: String = hostname_future
+        .await
+        .expect("get_hostname thread panicked!");
+    let boot_time: u64 = boot_time_future
+        .await
+        .expect("get_boot_time thread panicked!");
+    let packages: Packages = packages_future
+        .await
+        .expect("get_package_count thread panicked!");
 
     let system_info: SystemInfo = SystemInfo {
         cpu,
@@ -96,11 +108,13 @@ pub(crate) async fn fetch_all() -> SystemInfo {
 }
 
 pub(crate) fn serialize_fetch() -> String {
-    let system_info: SystemInfo = SYSTEM_INFO_MUTEX.lock()
+    let system_info: SystemInfo = SYSTEM_INFO_MUTEX
+        .lock()
         .expect("Failed to lock system info mutex")
-        .clone().expect("System info has not been initialized");
-    let serialized: String = serde_yaml::to_string(&system_info)
-        .expect("Failed to serialize system info");
+        .clone()
+        .expect("System info has not been initialized");
+    let serialized: String =
+        serde_yaml::to_string(&system_info).expect("Failed to serialize system info");
     serialized
 }
 
@@ -128,7 +142,8 @@ pub(crate) async fn get_cpu_name() -> String {
     sys.refresh_cpu();
     let string: String = sys.global_cpu_info().brand().to_string();
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -143,7 +158,8 @@ pub(crate) async fn get_distro() -> String {
     sys.refresh_system();
     let string: String = sys.name().unwrap_or(String::from("Unknown"));
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -173,12 +189,10 @@ pub(crate) async fn get_motherboard() -> String {
     let path: &str = r"SYSTEM\HardwareConfig\Current";
 
     let string: String = match local_machine_key.open_subkey(path) {
-        Ok(sub_key) => {
-            match sub_key.get_value("BaseBoardProduct") {
-                Ok(name) => name,
-                Err(_) => String::from("Unknown"),
-            }
-        }
+        Ok(sub_key) => match sub_key.get_value("BaseBoardProduct") {
+            Ok(name) => name,
+            Err(_) => String::from("Unknown"),
+        },
         Err(_) => String::from("Unknown"),
     };
 
@@ -187,7 +201,8 @@ pub(crate) async fn get_motherboard() -> String {
 }
 
 fn push_motherboard_value(string: &str) {
-    let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+    let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+        .lock()
         .expect("Failed to lock system info mutex");
     let system_info_option: Option<&mut SystemInfo> = option.as_mut();
     if let Some(system_info) = system_info_option {
@@ -200,7 +215,8 @@ pub(crate) async fn get_kernel() -> String {
     sys.refresh_system();
     let string: String = sys.kernel_version().unwrap_or(String::from("Unknown"));
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -211,7 +227,6 @@ pub(crate) async fn get_kernel() -> String {
 }
 
 pub(crate) async fn get_gpus() -> Vec<String> {
-
     let instance: Result<gfx_backend_vulkan::Instance, UnsupportedBackend> =
         Instance::create("hayabusa", 1);
     if instance.is_err() {
@@ -227,7 +242,8 @@ pub(crate) async fn get_gpus() -> Vec<String> {
     }
 
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -242,7 +258,8 @@ pub(crate) async fn get_total_memory() -> u64 {
     sys.refresh_memory();
     let i: u64 = sys.total_memory();
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -257,7 +274,8 @@ pub(crate) async fn get_used_memory() -> u64 {
     sys.refresh_memory();
     let i: u64 = sys.used_memory();
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -276,15 +294,12 @@ pub(crate) async fn get_disks() -> Vec<Disk> {
         let name: String = disk.mount_point().to_string_lossy().to_string();
         let used: u64 = disk.total_space() - disk.available_space();
         let total: u64 = disk.total_space();
-        let disk: Disk = Disk {
-            name,
-            used,
-            total,
-        };
+        let disk: Disk = Disk { name, used, total };
         disks.push(disk);
     }
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -300,7 +315,8 @@ pub(crate) async fn get_local_ip_address() -> String {
         Err(_) => "Unknown".to_string(),
     };
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -311,7 +327,8 @@ pub(crate) async fn get_local_ip_address() -> String {
 }
 
 pub(crate) async fn get_public_ip_address() -> String {
-    let client: Client = Client::builder().timeout(Duration::from_secs(5))
+    let client: Client = Client::builder()
+        .timeout(Duration::from_secs(5))
         .build()
         .expect("Failed to build reqwest client");
     let string = match client.get("https://ident.me").send().await {
@@ -319,7 +336,8 @@ pub(crate) async fn get_public_ip_address() -> String {
         Err(_) => "Unknown".to_string(),
     };
     {
-        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+        let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+            .lock()
             .expect("Failed to lock system info mutex");
         let system_info_option: Option<&mut SystemInfo> = option.as_mut();
         if let Some(system_info) = system_info_option {
@@ -348,16 +366,15 @@ pub(crate) async fn get_hostname() -> String {
         .output()
         .expect("Failed to execute command");
 
-    let hostname: String = String::from_utf8_lossy(&output.stdout)
-        .trim()
-        .to_string();
+    let hostname: String = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
     push_hostname(&hostname);
     hostname
 }
 
 fn push_hostname(string: &str) {
-    let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX.lock()
+    let mut option: MutexGuard<Option<SystemInfo>> = SYSTEM_INFO_MUTEX
+        .lock()
         .expect("Failed to lock system info mutex");
     let system_info_option: Option<&mut SystemInfo> = option.as_mut();
     if let Some(system_info) = system_info_option {

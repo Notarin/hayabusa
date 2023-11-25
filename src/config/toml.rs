@@ -1,10 +1,10 @@
+use crate::config::main::load_toml_config;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use crate::config::main::load_toml_config;
 
-lazy_static!(
+lazy_static! {
     pub(crate) static ref TOML_CONFIG_OBJECT: TomlConfig = load_toml_config();
-);
+};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct TomlConfig {

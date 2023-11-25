@@ -1,8 +1,8 @@
-use rlua::{Context, Lua, Table};
 use crate::client::client_info::main::environmental_variable_table;
 use crate::config::main::load_lua_config;
 use crate::daemon::fetch_info::{Disk, SystemInfo};
 use crate::daemon::package_managers::Packages;
+use rlua::{Context, Lua, Table};
 
 //noinspection SpellCheckingInspection
 pub(crate) fn execute_lua(system_info: SystemInfo) -> String {
@@ -14,7 +14,12 @@ pub(crate) fn execute_lua(system_info: SystemInfo) -> String {
         let globals: Table = lua_ctx.globals();
         let simple_table: Table = system_info_table(system_info, lua_ctx);
         globals.set("system_info", simple_table).unwrap();
-        globals.set("environmental_variables", environmental_variable_table(lua_ctx)).unwrap();
+        globals
+            .set(
+                "environmental_variables",
+                environmental_variable_table(lua_ctx),
+            )
+            .unwrap();
 
         let result: String = match lua_ctx.load(&lua_config).exec() {
             Ok(_) => globals.get("result").unwrap(),
@@ -38,9 +43,9 @@ fn system_info_table(
         public_ip,
         hostname,
         boot_time,
-        packages
+        packages,
     }: SystemInfo,
-    lua_ctx: Context
+    lua_ctx: Context,
 ) -> Table {
     let table: Table = lua_ctx.create_table().unwrap();
     table.set("distro", &*distro).unwrap();
@@ -64,7 +69,15 @@ fn system_info_table(
     table
 }
 
-fn packages_table(Packages { pacman, winget, dnf, apt }: Packages, lua_ctx: Context) -> Table {
+fn packages_table(
+    Packages {
+        pacman,
+        winget,
+        dnf,
+        apt,
+    }: Packages,
+    lua_ctx: Context,
+) -> Table {
     let packages_table: Table = lua_ctx.create_table().unwrap();
     packages_table.set("pacman", pacman).unwrap();
     packages_table.set("winget", winget).unwrap();

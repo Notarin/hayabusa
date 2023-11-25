@@ -1,9 +1,11 @@
+use crate::client::main::get_ascii_art;
+use crate::config::toml::{
+    Alignment, ArtPlacement, BorderChars, Padding, TomlConfig, TOML_CONFIG_OBJECT,
+};
+use crate::daemon::fetch_info::SystemInfo;
 use lazy_static::lazy_static;
 use regex::Regex;
 use unicode_width::UnicodeWidthStr;
-use crate::client::main::get_ascii_art;
-use crate::config::toml::{Alignment, ArtPlacement, BorderChars, Padding, TOML_CONFIG_OBJECT, TomlConfig};
-use crate::daemon::fetch_info::SystemInfo;
 
 use super::kitty_backend::get_kitty_image;
 
@@ -46,11 +48,7 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
 }
 
 fn terminate_styling(string: &mut String) {
-    let mut lines: Vec<String> = string.lines().map(
-        |s| {
-            s.to_string()
-        }
-    ).collect();
+    let mut lines: Vec<String> = string.lines().map(|s| s.to_string()).collect();
     for line in lines.iter_mut() {
         line.push_str("{{reset}}");
     }
@@ -60,11 +58,11 @@ fn terminate_styling(string: &mut String) {
 fn add_border(string: &str, border_chars: &BorderChars) -> String {
     let lines: Vec<&str> = string.lines().collect();
     let ansi_free_lines: Vec<String> = lines.iter().map(|s| remove_ansi_escape_codes(s)).collect();
-    let max_len: usize = ansi_free_lines.iter().map(
-        |s| {
-            UnicodeWidthStr::width(s.as_str())
-        }
-    ).max().unwrap_or(0);
+    let max_len: usize = ansi_free_lines
+        .iter()
+        .map(|s| UnicodeWidthStr::width(s.as_str()))
+        .max()
+        .unwrap_or(0);
     let config: &TomlConfig = &TOML_CONFIG_OBJECT;
     let mut ansi_color: String = config.border.ansi_color.clone();
     parse_internal_ansi_codes(&mut ansi_color);
@@ -89,10 +87,9 @@ fn add_border(string: &str, border_chars: &BorderChars) -> String {
         &color_reset,
     );
 
-    let estimated_capacity =
-        (max_len + ansi_color.len() + color_reset.len() + 10) * lines.len() +
-            top_horizontal_border.len() +
-            bottom_horizontal_border.len();
+    let estimated_capacity = (max_len + ansi_color.len() + color_reset.len() + 10) * lines.len()
+        + top_horizontal_border.len()
+        + bottom_horizontal_border.len();
     let mut bordered_string = String::with_capacity(estimated_capacity);
 
     bordered_string.push_str(&top_horizontal_border);
@@ -117,7 +114,7 @@ fn add_border(string: &str, border_chars: &BorderChars) -> String {
         bordered_string.push('\n');
     }
 
-// Corrected this section to only add the bottom border
+    // Corrected this section to only add the bottom border
     bordered_string.push_str(&bottom_horizontal_border);
 
     bordered_string
@@ -134,7 +131,8 @@ fn calculate_padding(string: &str, padding: u8) -> String {
     if padding == 0 {
         return String::new();
     }
-    let max_width = remove_ansi_escape_codes(string).lines()
+    let max_width = remove_ansi_escape_codes(string)
+        .lines()
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
@@ -157,7 +155,8 @@ fn add_lower_padding(string: &mut String, padding: u8) {
 
 fn add_left_padding(string: &mut String, padding: u8) {
     if padding > 0 {
-        *string = string.lines()
+        *string = string
+            .lines()
             .map(|line| format!("{}{}", " ".repeat(padding as usize), line))
             .collect::<Vec<String>>()
             .join("\n");
@@ -166,7 +165,8 @@ fn add_left_padding(string: &mut String, padding: u8) {
 
 fn add_right_padding(string: &mut String, padding: u8) {
     if padding > 0 {
-        *string = string.lines()
+        *string = string
+            .lines()
             .map(|line| format!("{}{}", line, " ".repeat(padding as usize)))
             .collect::<Vec<String>>()
             .join("\n");
@@ -185,37 +185,21 @@ fn add_ascii_art(ascii_art: &str, fetch: String) -> String {
 
     let result: String = match placement {
         ArtPlacement::Left => {
-            let blocks: Vec<&str> = vec![
-                ascii_art,
-                binding.as_str(),
-                &fetch
-            ];
+            let blocks: Vec<&str> = vec![ascii_art, binding.as_str(), &fetch];
             place_blocks_adjacent(blocks)
         }
         ArtPlacement::Right => {
-            let blocks: Vec<&str> = vec![
-                &fetch,
-                binding.as_str(),
-                ascii_art
-            ];
+            let blocks: Vec<&str> = vec![&fetch, binding.as_str(), ascii_art];
             place_blocks_adjacent(blocks)
         }
         ArtPlacement::Top => {
             let transposed_binding: String = transpose_string(binding);
-            let blocks: Vec<&str> = vec![
-                ascii_art,
-                transposed_binding.as_str(),
-                &fetch
-            ];
+            let blocks: Vec<&str> = vec![ascii_art, transposed_binding.as_str(), &fetch];
             blocks.join("\n")
         }
         ArtPlacement::Bottom => {
             let transposed_binding: String = transpose_string(binding);
-            let blocks: Vec<&str> = vec![
-                &fetch,
-                transposed_binding.as_str(),
-                ascii_art
-            ];
+            let blocks: Vec<&str> = vec![&fetch, transposed_binding.as_str(), ascii_art];
             blocks.join("\n")
         }
     };
@@ -229,14 +213,19 @@ fn align(mut blocks: Vec<&mut String>) {
         normalize(block);
     }
 
-    let max_width: usize = blocks.iter()
-        .map(|block| remove_ansi_escape_codes(block).lines()
-            .map(
-                UnicodeWidthStr::width
-            ).max().unwrap_or(0))
+    let max_width: usize = blocks
+        .iter()
+        .map(|block| {
+            remove_ansi_escape_codes(block)
+                .lines()
+                .map(UnicodeWidthStr::width)
+                .max()
+                .unwrap_or(0)
+        })
         .max()
         .unwrap_or(0);
-    let max_height: usize = blocks.iter()
+    let max_height: usize = blocks
+        .iter()
         .map(|block| block.lines().count())
         .max()
         .unwrap_or(0);
@@ -245,10 +234,11 @@ fn align(mut blocks: Vec<&mut String>) {
     match toml_config.ascii_art.placement {
         ArtPlacement::Top | ArtPlacement::Bottom => {
             for block in blocks {
-
-                let block_width = remove_ansi_escape_codes(block).lines().map(
-                    UnicodeWidthStr::width
-                ).max().unwrap_or(0);
+                let block_width = remove_ansi_escape_codes(block)
+                    .lines()
+                    .map(UnicodeWidthStr::width)
+                    .max()
+                    .unwrap_or(0);
 
                 let difference: usize = max_width - block_width;
 
@@ -259,21 +249,27 @@ fn align(mut blocks: Vec<&mut String>) {
                     }
                     Alignment::Right => {
                         let lines: Vec<String> = block.lines().map(String::from).collect();
-                        let padded_lines: Vec<String> = lines.iter().map(|line| {
-                            format!("{}{}", " ".repeat(difference), line)
-                        }).collect();
+                        let padded_lines: Vec<String> = lines
+                            .iter()
+                            .map(|line| format!("{}{}", " ".repeat(difference), line))
+                            .collect();
                         *block = padded_lines.join("\n");
                     }
                     _ => {
                         let left_difference: usize = difference / 2;
                         let right_difference: usize = difference - left_difference;
                         let lines: Vec<String> = block.lines().map(String::from).collect();
-                        let padded_lines: Vec<String> = lines.iter().map(|line| {
-                            format!("{}{}{}",
+                        let padded_lines: Vec<String> = lines
+                            .iter()
+                            .map(|line| {
+                                format!(
+                                    "{}{}{}",
                                     " ".repeat(left_difference),
                                     line,
-                                    " ".repeat(right_difference))
-                        }).collect();
+                                    " ".repeat(right_difference)
+                                )
+                            })
+                            .collect();
                         *block = padded_lines.join("\n");
                     }
                 }
@@ -299,9 +295,9 @@ fn align(mut blocks: Vec<&mut String>) {
 
                             let empty_lines: Vec<String> =
                                 vec![" ".repeat(max_width); empty_lines_to_add]
-                                .into_iter()
-                                .map(|s| s.to_string())
-                                .collect::<Vec<String>>();
+                                    .into_iter()
+                                    .map(|s| s.to_string())
+                                    .collect::<Vec<String>>();
 
                             lines.splice(0..0, empty_lines.into_iter());
                         }
@@ -333,11 +329,8 @@ fn align(mut blocks: Vec<&mut String>) {
 fn normalize(block: &mut String) {
     let block_lines: Vec<String> = block.lines().map(|s| s.to_string()).collect();
     let ansi_free_block: String = remove_ansi_escape_codes(block);
-    let ansi_free_block_lines: Vec<String> = ansi_free_block.lines().map(
-        |s| {
-            s.to_string()
-        }
-    ).collect();
+    let ansi_free_block_lines: Vec<String> =
+        ansi_free_block.lines().map(|s| s.to_string()).collect();
 
     let target_width: usize = ansi_free_block_lines
         .iter()
@@ -376,8 +369,10 @@ fn place_blocks_adjacent(blocks: Vec<&str>) -> String {
     let mut lines: Vec<Vec<String>> = Vec::new();
 
     for block in normalized_blocks {
-        let block_lines: Vec<String> = block.lines()
-            .map(|s| s.to_string()).collect::<Vec<String>>();
+        let block_lines: Vec<String> = block
+            .lines()
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>();
         if lines.is_empty() {
             lines = vec![vec![]; block_lines.len()];
         }
@@ -397,7 +392,8 @@ fn place_blocks_adjacent(blocks: Vec<&str>) -> String {
 }
 
 fn vertically_normalize(blocks: Vec<&str>) -> Vec<String> {
-    let max_height: usize = blocks.iter()
+    let max_height: usize = blocks
+        .iter()
         .map(|block| block.lines().count())
         .max()
         .unwrap_or(0);
@@ -422,9 +418,10 @@ fn vertically_normalize(blocks: Vec<&str>) -> Vec<String> {
     normalized_blocks
 }
 
-lazy_static!(
-    static ref ANSI_ESCAPE_CODE_REGEX: Regex = Regex::new(r"\x1B(?:\[[0-?]*[- /]*[@-~]|_[^\\]*;[^\\]*\\)").unwrap();
-);
+lazy_static! {
+    static ref ANSI_ESCAPE_CODE_REGEX: Regex =
+        Regex::new(r"\x1B(?:\[[0-?]*[- /]*[@-~]|_[^\\]*;[^\\]*\\)").unwrap();
+};
 
 fn remove_ansi_escape_codes(s: &str) -> String {
     let re: &Regex = &ANSI_ESCAPE_CODE_REGEX;
@@ -440,8 +437,8 @@ pub(crate) fn parse_internal_ansi_codes(ascii_art: &mut String) {
 
             if let Ok(value) = tag_content.parse::<u8>() {
                 let ansi_code: String = format!("\x1b[38;5;{}m", value);
-                *ascii_art = ascii_art.replace(&ascii_art[start_index..relative_end_index],
-                                               &ansi_code);
+                *ascii_art =
+                    ascii_art.replace(&ascii_art[start_index..relative_end_index], &ansi_code);
             } else {
                 // Failed to parse the number, move to the next tag
                 continue;
