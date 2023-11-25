@@ -7,6 +7,7 @@ use lazy_static::lazy_static;
 use local_ip_address::local_ip;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::process::{Command, Output};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 use sysinfo::{CpuExt, DiskExt, System, SystemExt};
@@ -179,6 +180,29 @@ pub(crate) async fn get_motherboard() -> String {
 
     push_motherboard_value(&string);
     string
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) async fn get_motherboard() -> String {
+    let output_raw: Result<Output, std::io::Error> = Command::new("system_profiler")
+        .arg("SPHardwareDataType")
+        .output();
+
+    let output: String = match output_raw {
+        Err(_) => {
+            return "Unknown".to_string();
+        }
+        Ok(x) => String::from_utf8(x.stdout)
+            .expect("non-utf8 response found from call to system_proflier"),
+    };
+
+    output
+        .split("\n")
+        .into_iter()
+        .filter(|x| x.contains("Model Number:"))
+        .map(|y| y.replace("Model Number:", ""))
+        .map(|z| z.trim().clone().to_string())
+        .collect()
 }
 
 #[cfg(target_os = "windows")]
@@ -357,6 +381,14 @@ pub(crate) async fn get_hostname() -> String {
 
     push_hostname(&string);
     string
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) async fn get_hostname() -> String {
+    match std::env::var("HOST") {
+        Err(_) => "Unknown".to_string(),
+        Ok(x) => x,
+    }
 }
 
 #[cfg(target_os = "windows")]
