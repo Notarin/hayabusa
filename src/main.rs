@@ -18,15 +18,15 @@ struct Args {
     benchmark: bool,
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 lazy_static! {
     static ref SOCKET_PATH: String = "/tmp/hayabusa".to_string();
-};
+}
 
 #[cfg(target_os = "windows")]
 lazy_static! {
     static ref SOCKET_PATH: String = "hayabusa".to_string();
-};
+}
 
 #[tokio::main]
 async fn main() {
