@@ -389,13 +389,14 @@ pub(crate) async fn get_hostname() -> String {
         .arg("-f")
         .output();
 
-    match output_raw {
+    let out = match output_raw {
         Err(_) => {
             return "Unknown".to_string();
         }
         Ok(x) => String::from_utf8(x.stdout)
             .expect("non-utf8 response found from call to hostname"),
-    }
+    };
+    out.trim().to_owned()
 }
 
 #[cfg(target_os = "windows")]
