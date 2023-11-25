@@ -10,7 +10,7 @@ use sysinfo::{System, SystemExt};
 
 lazy_static! {
     pub(crate) static ref SYSTEM_INFO_MUTEX: Mutex<Option<SystemInfo>> = Mutex::new(None);
-};
+}
 
 pub(crate) async fn main() {
     println!("Running as daemon");

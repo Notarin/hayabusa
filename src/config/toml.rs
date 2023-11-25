@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 lazy_static! {
     pub(crate) static ref TOML_CONFIG_OBJECT: TomlConfig = load_toml_config();
-};
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub(crate) struct TomlConfig {

@@ -421,7 +421,7 @@ fn vertically_normalize(blocks: Vec<&str>) -> Vec<String> {
 lazy_static! {
     static ref ANSI_ESCAPE_CODE_REGEX: Regex =
         Regex::new(r"\x1B(?:\[[0-?]*[- /]*[@-~]|_[^\\]*;[^\\]*\\)").unwrap();
-};
+}
 
 fn remove_ansi_escape_codes(s: &str) -> String {
     let re: &Regex = &ANSI_ESCAPE_CODE_REGEX;
