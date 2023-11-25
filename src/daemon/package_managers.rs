@@ -10,6 +10,7 @@ pub(crate) struct Packages {
     pub(crate) winget: u64,
     pub(crate) dnf: u64,
     pub(crate) apt: u64,
+    pub(crate) brew: u64,
 }
 
 pub(crate) async fn get_package_count() -> Packages {
@@ -21,12 +22,14 @@ pub(crate) async fn get_package_count() -> Packages {
     let winget: u64 = winget.await.unwrap_or(0);
     let dnf: u64 = dnf.await.unwrap_or(0);
     let apt: u64 = get_apt_package_count().await.unwrap_or(0);
+    let brew: u64 = get_brew_package_count().await.unwrap_or(0);
 
     let packages = Packages {
         pacman,
         winget,
         dnf,
         apt,
+        brew,
     };
 
     {
@@ -70,6 +73,23 @@ pub(crate) async fn get_apt_package_count() -> Result<u64, String> {
     let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
     let mut count: u64 = stdout.lines().count() as u64;
     count -= 1; // remove the first line, its a metadata line
+
+    Ok(count)
+}
+
+pub(crate) async fn get_brew_package_count() -> Result<u64, String> {
+    let output: Output = Command::new("brew")
+        .arg("list")
+        .arg("-1l")
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err("non-zero exit".to_string());
+    }
+    let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
+    let mut count: u64 = stdout.lines().count() as u64;
+    count -= 5; // remove 5 lines, they are metadata
 
     Ok(count)
 }
