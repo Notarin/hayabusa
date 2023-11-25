@@ -24,7 +24,7 @@ fn write_default_lua() {
     fs::write(lua_file_location, LUA_SCRIPT).expect("Failed to write default config.lua");
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 pub(crate) fn get_config_location() -> String {
     let config_dir: String = env::var("XDG_CONFIG_HOME")
         .unwrap_or_else(|_| env::var("HOME").expect("Failed to get $HOME") + "/.config");
@@ -115,7 +115,7 @@ fn write_default_toml() {
     fs::write(toml_file_location, contents).expect("Failed to write default config.toml");
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 pub(crate) fn get_toml_config_location() -> String {
     let config_dir: String = env::var("XDG_CONFIG_HOME")
         .unwrap_or_else(|_| env::var("HOME").expect("Failed to get $HOME") + "/.config");

@@ -47,6 +47,10 @@ pub(crate) async fn get_winget_package_count() -> Result<u64, String> {
         .output()
         .map_err(|e| e.to_string())?;
 
+    if !output.status.success() {
+        return Err("non-zero exit".to_string());
+    }
+
     let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
     let count: u64 = stdout.lines().count() as u64;
 
@@ -60,6 +64,9 @@ pub(crate) async fn get_apt_package_count() -> Result<u64, String> {
         .output()
         .map_err(|e| e.to_string())?;
 
+    if !output.status.success() {
+        return Err("non-zero exit".to_string());
+    }
     let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
     let mut count: u64 = stdout.lines().count() as u64;
     count -= 1; // remove the first line, its a metadata line
@@ -73,6 +80,10 @@ pub(crate) async fn get_pacman_package_count() -> Result<u64, String> {
         .output()
         .map_err(|e| e.to_string())?;
 
+    if !output.status.success() {
+        return Err("non-zero exit".to_string());
+    }
+
     let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
     let count: u64 = stdout.lines().count() as u64;
 
@@ -84,6 +95,10 @@ pub(crate) async fn get_dnf_package_count() -> Result<u64, String> {
         .arg("list")
         .output()
         .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err("non-zero exit".to_string());
+    }
 
     let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
     let mut count: u64 = stdout.lines().count() as u64;

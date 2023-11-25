@@ -156,7 +156,7 @@ fn scale_and_center_image(image: Vec<u8>) -> Result<Vec<u8>, String> {
 }
 
 #[derive(Debug)]
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 struct TerminalSize {
     width: u16,
     height: u16,
@@ -171,7 +171,7 @@ struct TerminalSize {
     cell_height: u16,
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn get_cell_size() -> Result<TerminalSize, String> {
     use nix::libc::ioctl;
     use nix::{ioctl_read, libc};
