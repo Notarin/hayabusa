@@ -16,3 +16,11 @@ install:
 	@cp $(SERVICE_FILE) $(SYSTEMD_PATH)/$(BINARY_NAME).service
 	@systemctl enable $(BINARY_NAME).service
 	@systemctl restart $(BINARY_NAME).service
+
+uninstall:
+	@echo "Uninstalling binary and service..."
+	@rm -f $(INSTALL_PATH)/$(BINARY_NAME)
+	@systemctl disable $(BINARY_NAME).service
+	@systemctl stop $(BINARY_NAME).service
+	@rm -f $(SYSTEMD_PATH)/$(BINARY_NAME).service
+	@systemctl daemon-reload
