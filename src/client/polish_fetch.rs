@@ -44,7 +44,13 @@ pub(crate) fn main(system_info: &SystemInfo, mut fetch: String) -> String {
     }
     // add outer padding
     add_padding(&mut full_fetch, &config.spacing.outer_padding);
-    reset_formatting_on_cr(&full_fetch)
+    reset_formatting_on_cr(&mut full_fetch);
+    disable_line_wrap(&mut full_fetch);
+    full_fetch
+}
+
+fn disable_line_wrap(string: &mut String) {
+    *string = format!("{}{}{}", "\x1b[?7l", string, "\x1b[?7h");
 }
 
 fn terminate_styling(string: &mut String) {
@@ -173,8 +179,8 @@ fn add_right_padding(string: &mut String, padding: u8) {
     };
 }
 
-fn reset_formatting_on_cr(string: &str) -> String {
-    string.replace('\r', "\x1b[0m\r")
+fn reset_formatting_on_cr(string: &mut String) {
+    *string = string.replace('\r', "\x1b[0m\r");
 }
 
 fn add_ascii_art(ascii_art: &str, fetch: String) -> String {
