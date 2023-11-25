@@ -23,7 +23,8 @@ pub(crate) fn get_kitty_image() -> Result<String, String> {
     let binding: String = toml_config.ascii_art.backend.image_width.to_string();
     let columns: &str = binding.as_str();
     let amount_of_columns_for_the_image_to_span: &String = &("c=".to_string() + columns + ",");
-    let amount_of_rows_for_the_image_to_span: &String = &("r=".to_string() + &target_rows.to_string() + ",");
+    let amount_of_rows_for_the_image_to_span: &String =
+        &("r=".to_string() + &target_rows.to_string() + ",");
     let reset_cursor_position_after_printing: &str = "C=1,";
     control_data.push_str(will_be_png_data);
     control_data.push_str(actually_display_the_image_please);
@@ -38,12 +39,12 @@ pub(crate) fn get_kitty_image() -> Result<String, String> {
     let mut chunked_image: Vec<String> = Vec::new();
     for (i, chunk) in chunked_payload.iter().enumerate() {
         // Check if it's the last chunk
-        let m_value: &str = if i == chunked_payload.len() - 1 { "0" } else { "1" };
-        let current_control_data: &str = if i != 0 {
-            ""
+        let m_value: &str = if i == chunked_payload.len() - 1 {
+            "0"
         } else {
-            &control_data
+            "1"
         };
+        let current_control_data: &str = if i != 0 { "" } else { &control_data };
 
         let image_string: String = format!(
             "{}_G{}m={};{}{}\\",
@@ -54,8 +55,8 @@ pub(crate) fn get_kitty_image() -> Result<String, String> {
 
     // In order to properly place the image, I'm literally just going to build a matrix of spaces
     // it works
-    let result: String = chunked_image.join("") +
-        build_space_matrix(toml_config.ascii_art.backend.image_width, target_rows).as_str();
+    let result: String = chunked_image.join("")
+        + build_space_matrix(toml_config.ascii_art.backend.image_width, target_rows).as_str();
     Ok(result)
 }
 
@@ -74,9 +75,9 @@ fn build_space_matrix(width: u16, height: u16) -> String {
 
 fn chunk_data(data: String, chunk_size: usize) -> Vec<String> {
     data.as_bytes()
-    .chunks(chunk_size)
-    .map(|chunk| String::from_utf8(chunk.to_vec()).unwrap())
-    .collect()
+        .chunks(chunk_size)
+        .map(|chunk| String::from_utf8(chunk.to_vec()).unwrap())
+        .collect()
 }
 
 fn get_target_rows(width: u16, height: u16) -> Result<u16, String> {
@@ -127,17 +128,19 @@ fn scale_and_center_image(image: Vec<u8>) -> Result<Vec<u8>, String> {
     let image_width: u32 = image.width();
     let image_height: u32 = image.height();
     let target_width: u32 = (*target_cell_width * terminal_size.cell_width) as u32;
-    let target_height: u32 = (target_width as f32 / image_width as f32 * image_height as f32) as u32;
+    let target_height: u32 =
+        (target_width as f32 / image_width as f32 * image_height as f32) as u32;
 
-    let scaled_image: DynamicImage =
-        image.resize_exact(
-            target_width,
-            target_height,
-            image::imageops::FilterType::Nearest
-        );
+    let scaled_image: DynamicImage = image.resize_exact(
+        target_width,
+        target_height,
+        image::imageops::FilterType::Nearest,
+    );
 
     // Placing the image on a canvas so its centered, yes, its just a few pixels, but it looks better
-    let canvas_height: u32 = (target_height as f32 / terminal_size.cell_height as f32).ceil() as u32 * terminal_size.cell_height as u32;
+    let canvas_height: u32 = (target_height as f32 / terminal_size.cell_height as f32).ceil()
+        as u32
+        * terminal_size.cell_height as u32;
     let canvas_width: u32 = target_width;
     let mut canvas: DynamicImage = DynamicImage::new_rgba8(canvas_width, canvas_height);
     let canvas_x: u32 = (canvas_width - target_width) / 2;
@@ -145,7 +148,9 @@ fn scale_and_center_image(image: Vec<u8>) -> Result<Vec<u8>, String> {
     image::imageops::overlay(&mut canvas, &scaled_image, canvas_x as i64, canvas_y as i64);
 
     let mut canvas_bytes: Cursor<Vec<u8>> = Cursor::new(Vec::new());
-    canvas.write_to(&mut canvas_bytes, image::ImageOutputFormat::Png).expect("Failed to write canvas to vec");
+    canvas
+        .write_to(&mut canvas_bytes, image::ImageOutputFormat::Png)
+        .expect("Failed to write canvas to vec");
 
     Ok(canvas_bytes.into_inner())
 }
@@ -166,11 +171,10 @@ struct TerminalSize {
     cell_height: u16,
 }
 
-
 #[cfg(target_os = "linux")]
 fn get_cell_size() -> Result<TerminalSize, String> {
-    use nix::{ioctl_read, libc};
     use nix::libc::ioctl;
+    use nix::{ioctl_read, libc};
 
     ioctl_read!(get_winsize, libc::TIOCGWINSZ, 0, libc::winsize);
 
@@ -205,8 +209,9 @@ fn get_cell_size() -> Result<TerminalSize, String> {
     terminal_size.cell_height = winsize.ws_ypixel / terminal_size.height;
 
     if terminal_size.cell_width == 0 || terminal_size.cell_height == 0 {
-        let error_message: String = "Failed to retrieve terminal info, ensure you're using a compliant terminal."
-            .to_string();
+        let error_message: String =
+            "Failed to retrieve terminal info, ensure you're using a compliant terminal."
+                .to_string();
         return Err(error_message);
     }
 

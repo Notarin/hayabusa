@@ -1,10 +1,10 @@
+use crate::client::{lua, polish_fetch};
+use crate::config::toml::{AsciiSize, TomlConfig, TOML_CONFIG_OBJECT};
+use crate::daemon::fetch_info::SystemInfo;
+use crate::{ascii_art, SOCKET_PATH};
+use interprocess::local_socket::LocalSocketStream;
 use std::borrow::Cow;
 use std::io::Read;
-use interprocess::local_socket::LocalSocketStream;
-use crate::{ascii_art, SOCKET_PATH};
-use crate::client::{lua, polish_fetch};
-use crate::config::toml::{AsciiSize, TOML_CONFIG_OBJECT, TomlConfig};
-use crate::daemon::fetch_info::SystemInfo;
 
 pub(crate) fn main() {
     let socket_path: String = SOCKET_PATH.clone();
@@ -20,11 +20,13 @@ pub(crate) fn main() {
             std::process::exit(1);
         });
     let mut buffer: Vec<u8> = vec![0u8; 65536];
-    let bytes_read: usize = client.read(&mut buffer).expect("Failed to read from socket");
+    let bytes_read: usize = client
+        .read(&mut buffer)
+        .expect("Failed to read from socket");
     buffer.truncate(bytes_read);
     let string: Cow<str> = String::from_utf8_lossy(&buffer);
-    let system_info: SystemInfo = serde_yaml::from_str(&string)
-        .expect("Failed to deserialize system info");
+    let system_info: SystemInfo =
+        serde_yaml::from_str(&string).expect("Failed to deserialize system info");
 
     let result: String = lua::execute_lua(system_info.clone());
 
@@ -47,12 +49,16 @@ pub(crate) fn get_ascii_art(distro: &str) -> String {
     match config.ascii_art.size {
         AsciiSize::Big => art_distro.big,
         AsciiSize::Small => art_distro.small,
-    }.to_string()
+    }
+    .to_string()
 }
 
 fn get_ascii_file(location: String) -> String {
     let mut file: String = String::new();
-    let mut file_handle: std::fs::File = std::fs::File::open(location).expect("Failed to open file");
-    file_handle.read_to_string(&mut file).expect("Failed to read file");
+    let mut file_handle: std::fs::File =
+        std::fs::File::open(location).expect("Failed to open file");
+    file_handle
+        .read_to_string(&mut file)
+        .expect("Failed to read file");
     file
 }

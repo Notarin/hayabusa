@@ -1,7 +1,7 @@
-use std::{env, fs};
+use crate::config::toml::{build_default_toml, TomlConfig};
 use std::collections::BTreeMap;
 use std::path::Path;
-use crate::config::toml::{build_default_toml, TomlConfig};
+use std::{env, fs};
 use toml::{from_str, to_string, Value};
 
 const LUA_SCRIPT: &str = include_str!("default.lua");
@@ -53,23 +53,25 @@ pub(crate) fn load_toml_config() -> TomlConfig {
         config
     } else {
         // If parsing fails, merge with default and retry.
-        let mut loaded_config: BTreeMap<String, Value> = from_str(&file_contents)
-            .expect("Failed to parse loaded config to BTreeMap.");
-        let default_config_map: BTreeMap<String, Value> = from_str(&to_string(&build_default_toml())
-            .expect("Failed to serialize default TOML."))
-            .expect("Failed to parse default config to BTreeMap.");
+        let mut loaded_config: BTreeMap<String, Value> =
+            from_str(&file_contents).expect("Failed to parse loaded config to BTreeMap.");
+        let default_config_map: BTreeMap<String, Value> =
+            from_str(&to_string(&build_default_toml()).expect("Failed to serialize default TOML."))
+                .expect("Failed to parse default config to BTreeMap.");
 
         let was_merged: bool = merge_maps(&mut loaded_config, &default_config_map);
         if was_merged {
-            let new_config_str: String = to_string(&loaded_config)
-                .expect("Failed to serialize merged config.");
+            let new_config_str: String =
+                to_string(&loaded_config).expect("Failed to serialize merged config.");
             fs::write(&toml_file_location, new_config_str)
                 .expect("Failed to update config.toml after merging.");
         }
 
-        from_str(&to_string(&loaded_config)
-            .expect("Failed to serialize merged config for final struct."))
-            .expect("Failed to parse final config to TomlConfig.")
+        from_str(
+            &to_string(&loaded_config)
+                .expect("Failed to serialize merged config for final struct."),
+        )
+        .expect("Failed to parse final config to TomlConfig.")
     }
 }
 
@@ -81,19 +83,21 @@ fn merge_maps(a: &mut BTreeMap<String, Value>, b: &BTreeMap<String, Value>) -> b
             std::collections::btree_map::Entry::Vacant(e) => {
                 was_merged = true;
                 e.insert(value.clone());
-            },
+            }
             std::collections::btree_map::Entry::Occupied(mut e) => {
                 if let Value::Table(a_inner) = e.get_mut() {
                     if let Value::Table(ref b_inner) = value {
-                        let mut a_btree: BTreeMap<String, Value> = a_inner.clone().into_iter().collect();
-                        let b_btree: BTreeMap<String, Value> = b_inner.clone().into_iter().collect();
+                        let mut a_btree: BTreeMap<String, Value> =
+                            a_inner.clone().into_iter().collect();
+                        let b_btree: BTreeMap<String, Value> =
+                            b_inner.clone().into_iter().collect();
                         if merge_maps(&mut a_btree, &b_btree) {
                             was_merged = true;
                             *a_inner = a_btree.into_iter().collect();
                         }
                     }
                 }
-            },
+            }
         }
     }
 
@@ -108,8 +112,7 @@ fn write_default_toml() {
         fs::create_dir_all(parent_dir).expect("Failed to create config directory");
     }
     let contents = to_string(&build_default_toml()).unwrap();
-    fs::write(toml_file_location, contents)
-        .expect("Failed to write default config.toml");
+    fs::write(toml_file_location, contents).expect("Failed to write default config.toml");
 }
 
 #[cfg(target_os = "linux")]

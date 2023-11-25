@@ -1,7 +1,7 @@
-mod daemon;
 mod ascii_art;
 mod client;
 mod config;
+mod daemon;
 
 use clap::Parser;
 use lazy_static::lazy_static;
@@ -10,19 +10,23 @@ use lazy_static::lazy_static;
 struct Args {
     #[arg(long, short, help = "Run as daemon")]
     daemon: bool,
-    #[arg(long, short, help = "On exit print the execution time, for benchmarking")]
+    #[arg(
+        long,
+        short,
+        help = "On exit print the execution time, for benchmarking"
+    )]
     benchmark: bool,
 }
 
 #[cfg(target_os = "linux")]
-lazy_static!(
+lazy_static! {
     static ref SOCKET_PATH: String = "/tmp/hayabusa".to_string();
-);
+};
 
 #[cfg(target_os = "windows")]
-lazy_static!(
+lazy_static! {
     static ref SOCKET_PATH: String = "hayabusa".to_string();
-);
+};
 
 #[tokio::main]
 async fn main() {
