@@ -2,6 +2,7 @@ use crate::daemon::fetch_info::{loop_update_system_info, serialize_fetch, System
 use crate::{daemon::fetch_info, SOCKET_PATH};
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use lazy_static::lazy_static;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 use std::fs::Permissions;
 use std::io::Write;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
