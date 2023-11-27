@@ -8,6 +8,7 @@ pub(crate) struct AllArt {
     pub(crate) windows: Art,
     pub(crate) ubuntu: Art,
     pub(crate) fallback: Art,
+    pub(crate) gentoo: Art,
 }
 
 pub(crate) const ALL_ART: AllArt = AllArt {
@@ -26,5 +27,9 @@ pub(crate) const ALL_ART: AllArt = AllArt {
     fallback: Art {
         big: include_str!("art_collection/fallback/big.ascii"),
         small: include_str!("art_collection/fallback/small.ascii"),
+    },
+    gentoo: Art {
+        big: include_str!("art_collection/gentoo/big.ascii"),
+        small: include_str!("art_collection/gentoo/small.ascii"),
     },
 };

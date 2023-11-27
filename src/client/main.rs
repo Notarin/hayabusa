@@ -5,6 +5,7 @@ use crate::{ascii_art, SOCKET_PATH};
 use interprocess::local_socket::LocalSocketStream;
 use std::borrow::Cow;
 use std::io::Read;
+use crate::ascii_art::main::AllArt;
 
 pub(crate) fn main() {
     let socket_path: String = SOCKET_PATH.clone();
@@ -40,10 +41,16 @@ pub(crate) fn get_ascii_art(distro: &str) -> String {
     if !config.ascii_art.ascii_art_file.is_empty() {
         return get_ascii_file(config.ascii_art.ascii_art_file);
     }
+
+    // This is a hack to ensure the developer(me) doesn't make a dumb mistake
+    // and forget to actually add the ascii art when creating a new logo
+    this_does_nothing(ascii_art::main::ALL_ART);
+
     let art_distro = match distro {
         "Arch Linux" => ascii_art::main::ALL_ART.arch,
         "Windows" => ascii_art::main::ALL_ART.windows,
         "Ubuntu" => ascii_art::main::ALL_ART.ubuntu,
+        "Gentoo" => ascii_art::main::ALL_ART.gentoo,
         _ => ascii_art::main::ALL_ART.fallback,
     };
     match config.ascii_art.size {
@@ -51,6 +58,10 @@ pub(crate) fn get_ascii_art(distro: &str) -> String {
         AsciiSize::Small => art_distro.small,
     }
     .to_string()
+}
+
+fn this_does_nothing(AllArt { arch, windows, ubuntu, fallback, gentoo }: AllArt) -> AllArt {
+    AllArt { arch, windows, ubuntu, fallback, gentoo }
 }
 
 fn get_ascii_file(location: String) -> String {
