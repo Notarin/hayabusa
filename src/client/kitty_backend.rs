@@ -97,7 +97,7 @@ fn preload_image_resolution() -> Result<(u16, u16), String> {
     let config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
     let mut path: String = config.ascii_art.backend.image_path.clone();
     if path.starts_with('~') {
-        let home_dir: String = env!("HOME").to_string();
+        let home_dir: String = std::env::var("HOME").expect("Failed to get $HOME");
         path = path.replace('~', &home_dir);
     }
     let image: Vec<u8> = fs::read(path).expect("Failed to read image file");
@@ -111,7 +111,7 @@ fn get_image() -> Result<Vec<u8>, String> {
     let config: &TOML_CONFIG_OBJECT = &TOML_CONFIG_OBJECT;
     let mut path: String = config.ascii_art.backend.image_path.clone();
     if path.starts_with('~') {
-        let home_dir: String = env!("HOME").to_string();
+        let home_dir: String = std::env::var("HOME").expect("Failed to get $HOME");
         path = path.replace('~', &home_dir);
     }
     let mut image: Vec<u8> = fs::read(path).expect("Failed to read image file");
