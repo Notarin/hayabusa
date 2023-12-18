@@ -26,6 +26,7 @@ pub(crate) async fn get_package_count() -> Packages {
     let apt: u64 = get_apt_package_count().await.unwrap_or(0);
     let brew: u64 = get_brew_package_count().await.unwrap_or(0);
     let emerge: u64 = get_emerge_package_count().await.unwrap_or(0);
+    let xbps: u64 = get_xbps_package_count().await.unwrap_or(0);
 
     let packages = Packages {
         pacman,
@@ -34,6 +35,7 @@ pub(crate) async fn get_package_count() -> Packages {
         apt,
         brew,
         emerge,
+        xbps,
     };
 
     {
@@ -146,4 +148,20 @@ pub(crate) async fn get_emerge_package_count() -> Result<u64, String> {
         }
         Err(e) => Err(e.to_string()),
     }
+}
+
+pub(crate) async fn get_xbps_package_count() -> Result<u64, String> {
+    let output: Output = Command::new("xbps-query")
+        .arg("-l")
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err("non-zero exit".to_string());
+    }
+
+    let stdout: String = String::from_utf8(output.stdout).map_err(|e| e.to_string())?;
+    let count: u64 = stdout.lines().count() as u64;
+
+    Ok(count)
 }
