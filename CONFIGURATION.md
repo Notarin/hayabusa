@@ -38,6 +38,7 @@ The hayabusa binary injects the system information into a global object named `s
 | `pacman` | Number    | Count of packages managed by Pacman. |
 | `winget` | Number    | Count of packages managed by WinGet. |
 | `dnf`    | Number    | Count of packages managed by DNF.    |
+| `xbps`   | Number    | Count of packages managed by XBPS.   |
 
 # config.toml
 
