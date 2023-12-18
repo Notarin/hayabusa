@@ -77,6 +77,7 @@ fn packages_table(
         apt,
         brew,
         emerge,
+        xbps,
     }: Packages,
     lua_ctx: Context,
 ) -> Table {
@@ -87,6 +88,7 @@ fn packages_table(
     packages_table.set("apt", apt).unwrap();
     packages_table.set("homebrew", brew).unwrap();
     packages_table.set("emerge", emerge).unwrap();
+    packages_table.set("xbps", xbps).unwrap();
     packages_table
 }
 
