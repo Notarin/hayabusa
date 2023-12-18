@@ -13,6 +13,7 @@ pub(crate) struct Packages {
     pub(crate) apt: u64,
     pub(crate) brew: u64,
     pub(crate) emerge: u64,
+    pub(crate) xbps: u64,
 }
 
 pub(crate) async fn get_package_count() -> Packages {
