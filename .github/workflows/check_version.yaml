@@ -1,0 +1,21 @@
+name: Check Version
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check if version changed
+        run: |
+          PR_VERSION=$(grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          MAIN_VERSION=$(git fetch origin main:main && git checkout main && grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          if [ "$PR_VERSION" = "$MAIN_VERSION" ]; then
+            echo "Version in Cargo.toml must be incremented."
+            exit 1
+          fi

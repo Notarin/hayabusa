@@ -1,0 +1,103 @@
+name: Create Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Rename binary for non-Windows
+        if: matrix.os != 'windows-latest'
+        run: mv target/${{ matrix.target }}/release/hayabusa target/${{ matrix.target }}/release/hayabusa-${{ matrix.os }}
+      - name: Rename binary for Windows
+        if: matrix.os == 'windows-latest'
+        run: mv target/${{ matrix.target }}/release/hayabusa.exe target/${{ matrix.target }}/release/hayabusa-windows.exe
+        shell: bash
+      - name: Upload artifact for non-Windows
+        if: matrix.os != 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: hayabusa-${{ matrix.os }}
+          path: target/${{ matrix.target }}/release/hayabusa-${{ matrix.os }}
+      - name: Upload artifact for Windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: hayabusa-windows-latest
+          path: target/${{ matrix.target }}/release/hayabusa-windows.exe
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Extract version from Cargo.toml
+        run: echo "VERSION=$(awk -F'\"' '/^version/ {print $2}' Cargo.toml)" >> $GITHUB_ENV
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: Release v${{ env.VERSION }}
+          draft: false
+          prerelease: false
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+      - name: Upload hayabusa.service
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./distribution/hayabusa.service
+          asset_name: hayabusa.service
+          asset_content_type: text/plain
+      - name: Upload Ubuntu Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hayabusa-ubuntu-latest/hayabusa-ubuntu-latest
+          asset_name: hayabusa-linux
+          asset_content_type: application/octet-stream
+      - name: Upload MacOS Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hayabusa-macos-latest/hayabusa-macos-latest
+          asset_name: hayabusa-macos
+          asset_content_type: application/octet-stream
+      - name: Upload Windows Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hayabusa-windows-latest/hayabusa-windows.exe
+          asset_name: hayabusa.exe
+          asset_content_type: application/octet-stream
