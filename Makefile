@@ -2,7 +2,7 @@
 
 BINARY_NAME=hayabusa
 INSTALL_PATH=/usr/local/bin
-SERVICE_FILE=src/daemon/hayabusa.service
+SERVICE_FILE=distribution/hayabusa.service
 SYSTEMD_PATH=/etc/systemd/system
 
 build:
