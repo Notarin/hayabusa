@@ -1,0 +1,15 @@
+name: Check Style
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: rustup update && rustup default stable
+      - name: Check formatting
+        run: cargo fmt -- --check

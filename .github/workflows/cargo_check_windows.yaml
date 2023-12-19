@@ -1,0 +1,17 @@
+name: Cargo Check (Windows)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  cargo-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: rustup update && rustup default stable
+      - name: Run cargo check
+        run: cargo check
+        env:
+          RUSTFLAGS: -D warnings

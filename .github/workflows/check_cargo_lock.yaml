@@ -1,0 +1,17 @@
+name: Check Cargo.lock
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-cargo-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust
+        run: rustup update && rustup default stable
+      - name: Generate Cargo.lock and check for changes
+        run: |
+          cargo generate-lockfile
+          git diff --exit-code Cargo.lock
