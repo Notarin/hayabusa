@@ -7,6 +7,7 @@ use lazy_static::lazy_static;
 use local_ip_address::local_ip;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 use std::process::{Command, Output};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
@@ -196,13 +197,16 @@ pub(crate) async fn get_motherboard() -> String {
             .expect("non-utf8 response found from call to system_proflier"),
     };
 
-    output
+    let string: String = output
         .split("\n")
         .into_iter()
         .filter(|x| x.contains("Model Number:"))
         .map(|y| y.replace("Model Number:", ""))
-        .map(|z| z.trim().clone().to_string())
-        .collect()
+        .map(|z| z.trim().to_string())
+        .collect();
+
+    push_motherboard_value(&string);
+    string
 }
 
 #[cfg(target_os = "windows")]
@@ -385,18 +389,20 @@ pub(crate) async fn get_hostname() -> String {
 
 #[cfg(target_os = "macos")]
 pub(crate) async fn get_hostname() -> String {
-    let output_raw: Result<Output, std::io::Error> = Command::new("hostname")
-        .arg("-f")
-        .output();
+    let output_raw: Result<Output, std::io::Error> = Command::new("hostname").arg("-f").output();
 
     let out = match output_raw {
         Err(_) => {
             return "Unknown".to_string();
         }
-        Ok(x) => String::from_utf8(x.stdout)
-            .expect("non-utf8 response found from call to hostname"),
+        Ok(x) => {
+            String::from_utf8(x.stdout).expect("non-utf8 response found from call to hostname")
+        }
     };
-    out.trim().to_owned()
+    let string = out.trim().to_owned();
+
+    push_hostname(&string);
+    string
 }
 
 #[cfg(target_os = "windows")]

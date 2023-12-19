@@ -1,7 +1,7 @@
-use std::fs;
 use crate::daemon::fetch_info::SystemInfo;
 use crate::daemon::main::SYSTEM_INFO_MUTEX;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::process::{Command, Output};
 use std::sync::MutexGuard;
 
@@ -143,7 +143,7 @@ pub(crate) async fn get_emerge_package_count() -> Result<u64, String> {
                 }
             }
             Ok(count)
-        },
-        Err(e) => Err(e.to_string())
+        }
+        Err(e) => Err(e.to_string()),
     }
 }
