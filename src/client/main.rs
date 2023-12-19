@@ -1,3 +1,4 @@
+use crate::ascii_art::main::AllArt;
 use crate::client::{lua, polish_fetch};
 use crate::config::toml::{AsciiSize, TomlConfig, TOML_CONFIG_OBJECT};
 use crate::daemon::fetch_info::SystemInfo;
@@ -5,7 +6,6 @@ use crate::{ascii_art, SOCKET_PATH};
 use interprocess::local_socket::LocalSocketStream;
 use std::borrow::Cow;
 use std::io::Read;
-use crate::ascii_art::main::AllArt;
 
 pub(crate) fn main() {
     let socket_path: String = SOCKET_PATH.clone();
@@ -60,8 +60,22 @@ pub(crate) fn get_ascii_art(distro: &str) -> String {
     .to_string()
 }
 
-fn this_does_nothing(AllArt { arch, windows, ubuntu, fallback, gentoo }: AllArt) -> AllArt {
-    AllArt { arch, windows, ubuntu, fallback, gentoo }
+fn this_does_nothing(
+    AllArt {
+        arch,
+        windows,
+        ubuntu,
+        fallback,
+        gentoo,
+    }: AllArt,
+) -> AllArt {
+    AllArt {
+        arch,
+        windows,
+        ubuntu,
+        fallback,
+        gentoo,
+    }
 }
 
 fn get_ascii_file(location: String) -> String {
