@@ -74,6 +74,15 @@ jobs:
           asset_path: ./distribution/hayabusa.service
           asset_name: hayabusa.service
           asset_content_type: text/plain
+      - name: Upload install-linux.sh
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./distribution/install-linux.sh
+          asset_name: install-linux.sh
+          asset_content_type: text/plain
       - name: Upload Ubuntu Binary
         uses: actions/upload-release-asset@v1
         env:
