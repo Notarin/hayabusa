@@ -10,6 +10,8 @@ use lazy_static::lazy_static;
 struct Args {
     #[arg(long, short, help = "Run as daemon")]
     daemon: bool,
+    #[arg(long, short, help = "Set the socket path for the client or daemon")]
+    socket_path: Option<String>,
     #[arg(
         long,
         short,
@@ -20,12 +22,15 @@ struct Args {
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 lazy_static! {
-    static ref SOCKET_PATH: String = "/tmp/hayabusa".to_string();
+    static ref SOCKET_PATH: String = parse_path().unwrap_or("/tmp/hayabusa".to_string());
 }
 
 #[cfg(target_os = "windows")]
 lazy_static! {
-    static ref SOCKET_PATH: String = "hayabusa".to_string();
+    static ref SOCKET_PATH: String = parse_path().unwrap_or("hayabusa".to_string());
+}
+fn parse_path() -> Option<String> {
+    Args::parse().socket_path
 }
 
 #[tokio::main]
