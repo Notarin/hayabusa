@@ -51,6 +51,7 @@ pub(crate) fn get_ascii_art(distro: &str) -> String {
         "Windows" => ascii_art::main::ALL_ART.windows,
         "Ubuntu" => ascii_art::main::ALL_ART.ubuntu,
         "Gentoo" => ascii_art::main::ALL_ART.gentoo,
+        "NixOS" => ascii_art::main::ALL_ART.nixos,
         _ => ascii_art::main::ALL_ART.fallback,
     };
     match config.ascii_art.size {
@@ -67,6 +68,7 @@ fn this_does_nothing(
         ubuntu,
         fallback,
         gentoo,
+        nixos,
     }: AllArt,
 ) -> AllArt {
     AllArt {
@@ -75,6 +77,7 @@ fn this_does_nothing(
         ubuntu,
         fallback,
         gentoo,
+        nixos,
     }
 }
 

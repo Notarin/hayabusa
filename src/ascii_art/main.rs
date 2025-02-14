@@ -9,6 +9,7 @@ pub(crate) struct AllArt {
     pub(crate) ubuntu: Art,
     pub(crate) fallback: Art,
     pub(crate) gentoo: Art,
+    pub(crate) nixos: Art,
 }
 
 pub(crate) const ALL_ART: AllArt = AllArt {
@@ -31,5 +32,9 @@ pub(crate) const ALL_ART: AllArt = AllArt {
     gentoo: Art {
         big: include_str!("art_collection/gentoo/big.ascii"),
         small: include_str!("art_collection/gentoo/small.ascii"),
+    },
+    nixos: Art {
+        big: include_str!("art_collection/nixos/big.ascii"),
+        small: include_str!("art_collection/nixos/small.ascii"),
     },
 };
