@@ -697,7 +697,7 @@ checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 
 [[package]]
 name = "hayabusa"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "base64",
  "clap",
