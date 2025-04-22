@@ -119,7 +119,7 @@ pub(crate) async fn get_pacman_package_count() -> Result<u64, String> {
 
 pub(crate) async fn get_dnf_package_count() -> Result<u64, String> {
     let output: Output = Command::new("dnf")
-        .arg("list")
+        .args(["list", "--installed"])
         .output()
         .map_err(|e| e.to_string())?;
 
