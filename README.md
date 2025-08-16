@@ -45,11 +45,6 @@ break something.
 
 Finished! You can now run `hayabusa` to run the program.
 
-## Uninstallation
-- Inside the repository, run `sudo make uninstall`
-
-Finished! The program is now uninstalled.
-
 ## Usage
 You will need to have the daemon running in the background before making a
 request with the user facing binary. It is recommended to use a systemd
