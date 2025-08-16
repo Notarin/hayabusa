@@ -697,7 +697,7 @@ checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 
 [[package]]
 name = "hayabusa"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "base64",
  "clap",
@@ -1403,9 +1403,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.97"
+version = "1.0.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d61789d7719defeb74ea5fe81f2fdfdbd28a803847077cecce2ff14e1472f6f1"
+checksum = "56b3997d62ff36d1d0e5616f1e00c4b071680eb3769d56102663c1f0886971e1"
 dependencies = [
  "unicode-ident",
 ]
